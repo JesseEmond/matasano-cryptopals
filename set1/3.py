@@ -8,5 +8,5 @@ cipher = bytes.fromhex(
 
 possible_keys = range(256)
 possible_msgs = [xor_single_char_key(cipher, key) for key in possible_keys]
-messages = sorted(possible_msgs, key=english_test, reverse=True)
-print(messages[0].decode('ascii'))
+message = max(possible_msgs, key=english_test).decode('ascii')
+print(message)
