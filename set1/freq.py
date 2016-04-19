@@ -35,4 +35,13 @@ def english_test(bytes_):
     except:
         return 0
 
-    return sum([freqs[c.lower()] if c in freqs else 0 for c in msg])
+    filtered = list(filter(lambda c: c in freqs.keys(), msg))
+    if not filtered:
+        return 0
+
+    error = 0
+    for c, ratio in freqs.items():
+        actual = filtered.count(c) / len(filtered)
+        error += abs(ratio - actual)
+
+    return 1 / error
