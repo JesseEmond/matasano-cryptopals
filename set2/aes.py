@@ -3,7 +3,7 @@ from Crypto.Cipher import AES
 
 def ecb_encrypt(key, block):
     suite = AES.new(key, AES.MODE_ECB)
-    return suite.encrypt(block)
+    return suite.encrypt(pad(block))
 
 
 def ecb_decrypt(key, block):
@@ -20,7 +20,7 @@ def xor_blocks(a, b):
 
 
 def cbc_encrypt(key, iv, plaintext):
-    blocks = get_blocks(plaintext)
+    blocks = get_blocks(pad(plaintext))
     ciphertext = bytearray()
 
     for block in blocks:
@@ -28,7 +28,7 @@ def cbc_encrypt(key, iv, plaintext):
         ciphertext.extend(encrypted)
         iv = encrypted
 
-    return ciphertext
+    return bytes(ciphertext)
 
 
 def cbc_decrypt(key, iv, ciphertext):
@@ -40,4 +40,9 @@ def cbc_decrypt(key, iv, ciphertext):
         plaintext.extend(xor_blocks(iv, decrypted))
         iv = block
 
-    return plaintext
+    return bytes(plaintext)
+
+
+def pad(bytes_, block_size=16):
+    padding = (block_size - len(bytes_) % block_size) % block_size
+    return bytes_ + bytes([padding] * padding)
