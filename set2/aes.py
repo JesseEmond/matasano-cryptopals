@@ -1,18 +1,34 @@
 from Crypto.Cipher import AES
 
 
-def ecb_encrypt(key, block):
+def ecb_encrypt_block(key, block):
     suite = AES.new(key, AES.MODE_ECB)
-    return suite.encrypt(pad(block))
+    return suite.encrypt(block)
 
 
-def ecb_decrypt(key, block):
+def ecb_decrypt_block(key, block):
     suite = AES.new(key, AES.MODE_ECB)
     return suite.decrypt(block)
 
 
-def get_blocks(bytes_):
-    return [bytes_[i:i+16] for i in range(0, len(bytes_), 16)]
+def ecb_encrypt(key, plaintext):
+    blocks = get_blocks(pad(plaintext))
+    ciphertext = bytearray()
+    for block in blocks:
+        ciphertext.extend(ecb_encrypt_block(key, block))
+    return bytes(ciphertext)
+
+
+def ecb_decrypt(key, ciphertext):
+    blocks = get_blocks(ciphertext)
+    plaintext = bytearray()
+    for block in blocks:
+        plaintext.extend(ecb_decrypt_block(key, block))
+    return bytes(plaintext)
+
+
+def get_blocks(bytes_, blocksize=16):
+    return [bytes_[i:i+blocksize] for i in range(0, len(bytes_), blocksize)]
 
 
 def xor_blocks(a, b):
@@ -24,7 +40,7 @@ def cbc_encrypt(key, iv, plaintext):
     ciphertext = bytearray()
 
     for block in blocks:
-        encrypted = ecb_encrypt(key, xor_blocks(iv, block))
+        encrypted = ecb_encrypt_block(key, xor_blocks(iv, block))
         ciphertext.extend(encrypted)
         iv = encrypted
 
@@ -36,7 +52,7 @@ def cbc_decrypt(key, iv, ciphertext):
     plaintext = bytearray()
 
     for block in blocks:
-        decrypted = ecb_decrypt(key, block)
+        decrypted = ecb_decrypt_block(key, block)
         plaintext.extend(xor_blocks(iv, decrypted))
         iv = block
 
