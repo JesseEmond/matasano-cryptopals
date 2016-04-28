@@ -39,9 +39,9 @@ def oracle(input_):
 PADDING_BYTE = 0x42
 
 
-def get_last_known_block(ciphertext, blocksize):
+def get_last_known_block(plaintext, blocksize):
     """
-    Returns the last block that we know of the ciphertext (or placeholders if
+    Returns the last block that we know of the plaintext (or placeholders if
     unknown yet). This is the block used as a prefix when bruteforcing a byte.
 
     Example 1: if we have bruteforced the following string:
@@ -59,20 +59,20 @@ def get_last_known_block(ciphertext, blocksize):
     "setC"
     ...
     """
-    last_ciphertext_block = ciphertext[-blocksize:]
-    assert(len(ciphertext) < blocksize or
-           len(last_ciphertext_block) == blocksize)
+    last_plaintext_block = plaintext[-blocksize:]
+    assert(len(plaintext) < blocksize or
+           len(last_plaintext_block) == blocksize)
 
     # missing bytes? pad with a constant padding byte
-    padding = bytes([PADDING_BYTE] * (blocksize - len(last_ciphertext_block)))
+    padding = bytes([PADDING_BYTE] * (blocksize - len(last_plaintext_block)))
 
-    guessing_block = padding + last_ciphertext_block
+    guessing_block = padding + last_plaintext_block
     assert(len(guessing_block) == blocksize)
 
     return guessing_block
 
 
-def target_next_byte(ciphertext, blocksize):
+def target_next_byte(plaintext, blocksize):
     """
     Returns a pair (padding_input, target_block_idx) used to bruteforce the
     next byte.
@@ -99,7 +99,7 @@ def target_next_byte(ciphertext, blocksize):
                We pad in such a way that the byte after the last 't' ends up
                at the end of a block.
     """
-    current_idx = len(ciphertext)
+    current_idx = len(plaintext)
     current_block_idx = current_idx // blocksize
     current_idx_in_block = current_idx % blocksize
 
@@ -115,13 +115,13 @@ assert(16 == blocksize)
 assert(is_ecb(oracle, blocksize))
 
 blocks_count = len(get_blocks(oracle(bytes())))
-ciphertext = bytearray()
+plaintext = bytearray()
 
 for block_idx in range(blocks_count):
     for byte_idx in range(blocksize):
-        last_known_block = get_last_known_block(ciphertext, blocksize)
+        last_known_block = get_last_known_block(plaintext, blocksize)
 
-        input_, target_block_idx = target_next_byte(ciphertext, blocksize)
+        input_, target_block_idx = target_next_byte(plaintext, blocksize)
         encrypted = oracle(input_)
 
         target_block = get_blocks(encrypted)[target_block_idx]
@@ -133,7 +133,7 @@ for block_idx in range(blocks_count):
             guess = get_blocks(encrypted_guess)[0]
 
             if target_block == guess:
-                ciphertext.append(byte)
+                plaintext.append(byte)
                 stdout.write(chr(byte))
                 stdout.flush()
                 break
