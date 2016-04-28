@@ -1,6 +1,10 @@
 from Crypto.Cipher import AES
 
 
+class BadPaddingException(Exception):
+    pass
+
+
 def ecb_encrypt_block(key, block):
     suite = AES.new(key, AES.MODE_ECB)
     return suite.encrypt(block)
@@ -62,3 +66,17 @@ def cbc_decrypt(key, iv, ciphertext):
 def pad(bytes_, block_size=16):
     padding = (block_size - len(bytes_) % block_size) % block_size
     return bytes_ + bytes([padding] * padding)
+
+
+def unpad(bytes_, block_size=16):
+    pad_val = bytes_[-1]
+
+    if pad_val < block_size:
+        pad = bytes_[-pad_val:]
+
+        if pad != bytes([pad_val] * pad_val):
+            raise BadPaddingException()
+
+        return bytes_[:-pad_val]
+    else:
+        return bytes_
