@@ -5,7 +5,8 @@
 # asserts). If any of the program returns a non-zero exit code, this exits with
 # a non-zero exit code.
 
-for file in src/*.py; do
+cd src
+for file in *.py; do
   echo "Running $file..."
   python $file
   ret=$?
