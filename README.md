@@ -58,4 +58,12 @@ convenience.*
   blocks of plaintext at different positions will produce the same ciphertext
   block. All that we need to do is find the ciphertext that has the most (or
   any, really) duplicate ciphertext blocks, which is very unlikely with 16 bytes
-  of random data.
+  of otherwise random data.
+
+## Set 2: Block crypto
+
+*Pending descriptions.*
+
+## Set 3: Block & stream crypto
+
+*In progress.*
