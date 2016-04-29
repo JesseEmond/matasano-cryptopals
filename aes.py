@@ -1,4 +1,5 @@
 from Crypto.Cipher import AES
+from xor import xor_bytes
 
 
 class BadPaddingException(Exception):
@@ -35,16 +36,12 @@ def get_blocks(bytes_, blocksize=16):
     return [bytes_[i:i+blocksize] for i in range(0, len(bytes_), blocksize)]
 
 
-def xor_blocks(a, b):
-    return bytes([x ^ y for x, y in zip(a, b)])
-
-
 def cbc_encrypt(key, iv, plaintext):
     blocks = get_blocks(pad(plaintext))
     ciphertext = bytearray()
 
     for block in blocks:
-        encrypted = ecb_encrypt_block(key, xor_blocks(iv, block))
+        encrypted = ecb_encrypt_block(key, xor_bytes(iv, block))
         ciphertext.extend(encrypted)
         iv = encrypted
 
@@ -57,7 +54,7 @@ def cbc_decrypt(key, iv, ciphertext):
 
     for block in blocks:
         decrypted = ecb_decrypt_block(key, block)
-        plaintext.extend(xor_blocks(iv, decrypted))
+        plaintext.extend(xor_bytes(iv, decrypted))
         iv = block
 
     return bytes(plaintext)

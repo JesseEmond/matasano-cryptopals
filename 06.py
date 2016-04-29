@@ -1,7 +1,7 @@
-from dist import hamming
+from distance import hamming
 from base64 import b64decode
 from xor import xor_single_char_key, xor_repeating_key
-from freq import english_test
+from frequency import english_test
 
 
 def guess_keysize(cipher):
@@ -33,7 +33,7 @@ def break_single_char(cipher):
     return best[0]
 
 
-with open("6.txt") as f:
+with open("06.txt") as f:
     lines = f.readlines()
 
 cipher = b64decode(''.join(lines))
@@ -41,4 +41,7 @@ key = brute(cipher)
 print("key : %s" % key.decode('ascii'))
 
 decrypted = xor_repeating_key(cipher, key)
-print(decrypted.decode('ascii'))
+message = decrypted.decode('ascii')
+print(message)
+
+assert(message.startswith("I'm back and I'm ringin' the bell"))

@@ -1,4 +1,4 @@
-from b64 import b64encode
+from mybase64 import b64encode
 
 
 hex_str = ("49276d206b696c6c696e6720796f7572"

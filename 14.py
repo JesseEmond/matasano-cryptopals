@@ -178,3 +178,6 @@ for block_idx in range(blocks_count):
                 stdout.write(chr(byte))
                 stdout.flush()
                 break
+
+
+assert(plaintext.startswith(b"Rollin' in my 5.0"))

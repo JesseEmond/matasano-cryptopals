@@ -1,5 +1,5 @@
 from xor import xor_single_char_key
-from freq import english_test
+from frequency import english_test
 
 
 def best_message(cipher):
@@ -9,10 +9,11 @@ def best_message(cipher):
     return message
 
 
-with open("4.txt") as f:
+with open("04.txt") as f:
     ciphers = [bytes.fromhex(line.strip()) for line in f.readlines()]
 
 message = max([best_message(cipher) for cipher in ciphers],
               key=english_test).decode('ascii')
 
 print(message)
+assert("Now that the party is jumping\n" == message)

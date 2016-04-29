@@ -1,4 +1,5 @@
-from aes import cbc_encrypt, cbc_decrypt, xor_blocks
+from aes import cbc_encrypt, cbc_decrypt
+from xor import xor_bytes
 from os import urandom
 
 
@@ -57,13 +58,13 @@ target = ";admin=true;abc=".encode('ascii')
 current_block = token[32:32+16]
 next_block_plain = ";comment2=%20lik".encode('ascii')
 # decryption does: plaintext = next_block_pre_xor ^ current_block
-next_block_pre_xor = xor_blocks(next_block_plain, current_block)
+next_block_pre_xor = xor_bytes(next_block_plain, current_block)
 
 # craft a block with the bitflips that we want to produce on the next block
 # we want to craft a current_block so that decryption does:
 # target = next_block_pre_xor ^ crafted_block
 # so we isolated current_block and get:
-crafted_block = xor_blocks(target, next_block_pre_xor)
+crafted_block = xor_bytes(target, next_block_pre_xor)
 assert(len(crafted_block) == 16)
 
 crafted_token = token[:32] + crafted_block + token[32+16:]
