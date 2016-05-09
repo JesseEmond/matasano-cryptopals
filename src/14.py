@@ -2,7 +2,6 @@ from aes import ecb_encrypt, get_blocks
 from base64 import b64decode
 from os import urandom
 from sys import stdout
-from math import ceil
 
 
 SECRET = b64decode(
@@ -153,10 +152,9 @@ prefix_padding = bytes([0] * prefix_padding_len)
 prefix_blocks_len = (prefix_len + prefix_padding_len) // blocksize
 assert(PREFIX_LEN == prefix_len)
 
-blocks_count = ceil((len(oracle(bytes())) - prefix_len) / blocksize)
 plaintext = bytearray()
 
-for block_idx in range(blocks_count):
+while True:  # can't tell when we're done beforehand, prefix is random
     for byte_idx in range(blocksize):
         last_known_block = get_last_known_block(plaintext, blocksize)
 
@@ -168,16 +166,21 @@ for block_idx in range(blocks_count):
 
         block_prefix = last_known_block[1:]
 
+        found_match = False
         for byte in range(256):
             ciphertext_guess = block_prefix + bytes([byte])
             encrypted_guess = oracle(prefix_padding + ciphertext_guess)
             guess = get_blocks(encrypted_guess, blocksize)[prefix_blocks_len]
 
             if target_block == guess:
+                found_match = True
                 plaintext.append(byte)
                 stdout.write(chr(byte))
                 stdout.flush()
                 break
 
+    if not found_match:  # no byte matched => last byte was a padding byte
+        plaintext = plaintext[:-1]  # remove that matched padding byte
+        break  # we're done!
 
-assert(plaintext.startswith(b"Rollin' in my 5.0"))
+assert(plaintext == SECRET)

@@ -114,28 +114,33 @@ assert(16 == blocksize)
 
 assert(is_ecb(oracle, blocksize))
 
-blocks_count = len(get_blocks(oracle(bytes())))
+bytes_count = len(oracle(bytes()))
 plaintext = bytearray()
 
-for block_idx in range(blocks_count):
-    for byte_idx in range(blocksize):
-        last_known_block = get_last_known_block(plaintext, blocksize)
+for _ in range(bytes_count):
+    last_known_block = get_last_known_block(plaintext, blocksize)
 
-        input_, target_block_idx = target_next_byte(plaintext, blocksize)
-        encrypted = oracle(input_)
+    input_, target_block_idx = target_next_byte(plaintext, blocksize)
+    encrypted = oracle(input_)
 
-        target_block = get_blocks(encrypted)[target_block_idx]
+    target_block = get_blocks(encrypted)[target_block_idx]
 
-        prefix = last_known_block[1:]
+    prefix = last_known_block[1:]
 
-        for byte in range(256):
-            encrypted_guess = oracle(prefix + bytes([byte]))
-            guess = get_blocks(encrypted_guess)[0]
+    found_match = False
+    for byte in range(256):
+        encrypted_guess = oracle(prefix + bytes([byte]))
+        guess = get_blocks(encrypted_guess)[0]
 
-            if target_block == guess:
-                plaintext.append(byte)
-                stdout.write(chr(byte))
-                stdout.flush()
-                break
+        if target_block == guess:
+            found_match = True
+            plaintext.append(byte)
+            stdout.write(chr(byte))
+            stdout.flush()
+            break
 
-assert(plaintext.startswith(b"Rollin' in my 5.0"))
+    if not found_match:  # no byte matched => last byte was a padding byte
+        plaintext = plaintext[:-1]  # remove that matched padding byte
+        break  # we are done!
+
+assert(plaintext == secret)
