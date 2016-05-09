@@ -77,6 +77,12 @@ convenience.*
 
 - [x] [10. Implement CBC mode](src/.py)
 
+  [Wikipedia](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_.28CBC.29)'s
+  image on the matter is enough of a description to implement this. Basically,
+  every encrypted block is XORed with the previous block (or the IV if this is
+  the first block). The result is that 2 identical plaintext blocks will no
+  longer automatically encrypt to the same ciphertext block (compared to ECB).
+
 - [x] [11. An ECB/CBC detection oracle](src/.py)
 
 - [x] [12. Byte-at-a-time ECB decryption (Simple)](src/.py)
