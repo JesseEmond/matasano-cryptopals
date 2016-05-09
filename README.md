@@ -85,6 +85,16 @@ convenience.*
 
 - [x] [11. An ECB/CBC detection oracle](src/.py)
 
+  When using ECB, two identical plaintext blocks will encrypt to the same
+  ciphertext block.
+    
+  Therefore, a block that contains duplicate plaintext blocks will contain
+  duplicate ciphertext blocks once encrypted.
+
+  Our oracle checks if the ciphertext contains duplicate blocks. If it does, we
+  consider the ciphertext to be encrypted using ECB. Otherwise, we consider that
+  it used CBC.
+
 - [x] [12. Byte-at-a-time ECB decryption (Simple)](src/.py)
 
 - [x] [13. ECB cut-and-paste](src/.py)
