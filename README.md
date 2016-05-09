@@ -62,6 +62,30 @@ convenience.*
 
 ## Set 2: Block crypto
 
+- [x] [9. Implement PKCS#7 padding](src/09.py)
+
+  We pad the plaintext so that it has a length that is a multiple of the
+  blocksize (e.g. 16). If it already is, we add a full block of padding. The
+  padding byte to use is equal to the length of the padding.
+
+  Examples:
+  pad('0123456789') = '0123456789' + '666666'
+  pad('') = '\x10' * 16
+
+- [x] [10. Implement CBC mode](src/.py)
+
+- [x] [11. An ECB/CBC detection oracle](src/.py)
+
+- [x] [12. Byte-at-a-time ECB decryption (Simple)](src/.py)
+
+- [x] [13. ECB cut-and-paste](src/.py)
+
+- [x] [14. Byte-at-a-time ECB decryption (Harder)](src/.py)
+
+- [x] [15. PKCS#7 padding validation](src/.py)
+
+- [x] [16. CBC bitflipping attacks](src/.py)
+
 *Pending descriptions.*
 
 ## Set 3: Block & stream crypto
