@@ -69,8 +69,11 @@ convenience.*
   padding byte to use is equal to the length of the padding.
 
   Examples:
+
+  ```
   pad('0123456789') = '0123456789' + '666666'
   pad('') = '\x10' * 16
+  ```
 
 - [x] [10. Implement CBC mode](src/.py)
 
