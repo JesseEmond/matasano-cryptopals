@@ -1,4 +1,4 @@
-from aes import ecb_encrypt, ecb_decrypt, unpad
+from aes import ecb_encrypt, ecb_decrypt
 from os import urandom
 
 
@@ -28,7 +28,7 @@ def oracle(email):
 
 
 def log_in(token):
-    decrypted = unpad(ecb_decrypt(key, token))
+    decrypted = ecb_decrypt(key, token)
 
     profile = parse_profile(decrypted.decode('ascii'))
     return profile['role'] == 'admin'

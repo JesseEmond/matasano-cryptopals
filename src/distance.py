@@ -11,5 +11,6 @@ def hamming(a, b):
     return dist
 
 
-assert(hamming("this is a test".encode('ascii'),
-               "wokka wokka!!!".encode('ascii')) == 37)
+if __name__ == "__main__":
+    assert(hamming("this is a test".encode('ascii'),
+                   "wokka wokka!!!".encode('ascii')) == 37)
