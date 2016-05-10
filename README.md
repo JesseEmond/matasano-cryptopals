@@ -255,7 +255,30 @@ convenience.*
 
 - [x] [16. CBC bitflipping attacks](src/16.py)
 
-*Pending descriptions.*
+  Start out by encrypting a normal token for a filled block of 16 bytes:
+
+  ```
+  > get_token("a" * 16)
+  plaintext:  (...)aaaaaaaaaaaaaaaa(...)
+  ciphertext: (...) current_block  (...)
+              ----||----block-----||----
+  ```
+
+  We want to inject `target = ";admin=true;abc="`.
+
+  We know that the plaintext block following our input is:
+  `next_plain = ";comment2=%20lik"`.
+
+  When decrypting with CBC, the following is done:
+  `next_plain = next_block_pre_xor ^ current_block`
+
+  We can calculate `next_block_pre_xor = next_plain ^ current_block`.
+
+  We want `next_block_re_xor ^ crafter_block` to yield `target`, so we choose:
+  `crafter_block = target ^ next_block_pre_xor`.
+
+  Then, all we need is to swap `current_block` with our `crafter_block` to get
+  admin access.
 
 ## Set 3: Block & stream crypto
 
