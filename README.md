@@ -274,7 +274,7 @@ convenience.*
 
   Then, all we need is to swap `current_block` with our `crafted_block` to get
   admin access. The decryption of `current_block` will yield scrambled
-  plaintext, but it is not a problem since it only modified `comment1`.
+  plaintext, but it is not a problem since it only modifies `comment1`.
 
 ## Set 3: Block & stream crypto
 
