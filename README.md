@@ -194,6 +194,33 @@ convenience.*
 
 - [x] [13. ECB cut-and-paste](src/.py)
 
+  Using the same exploitable ECB property as before, we craft multiple messages
+  and pick-and-choose the parts that we want.
+
+  Blocks A:
+  ```
+  email=aaaaaaaaaa (A0)
+  adminPPPPPPPPPPP (A1) (P is the padding that will be needed as a final block)
+  &uid=10&role=use (A2)
+  rPPPPPPPPPPPPPPP (A3)
+  ```
+
+  Blocks B:
+  ```
+  email=aaaaaaaaaa (B0)
+  aaa&uid=10&role= (B1)
+  userPPPPPPPPPPPP (B2)
+  ```
+
+  By crafting the ciphertext `B0 + B1 + A1`, we get:
+  ```
+  email=aaaaaaaaaa (B0)
+  aaa&uid=10&role= (B1)
+  adminPPPPPPPPPPP (A1)
+  ```
+
+  Which grants us admin access to log in.
+
 - [x] [14. Byte-at-a-time ECB decryption (Harder)](src/.py)
 
 - [x] [15. PKCS#7 padding validation](src/.py)
