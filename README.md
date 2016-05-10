@@ -234,7 +234,7 @@ convenience.*
   don't just have identical blocks because the prefix happened to end with our
   fixed value (therefore fooling us into thinking that we have padded 1 more
   byte than we really have), we can try with 2 different fixed values, e.g.
-  `[0] * 32` and `[1] * 32`).
+  `[0] * 32` and `[1] * 32`.
   
   Then, one can use the index where the duplicate blocks begin to find where the
   first block after the prefix starts. With that information, we can find the
