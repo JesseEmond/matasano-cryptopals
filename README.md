@@ -97,6 +97,80 @@ convenience.*
 
 - [x] [12. Byte-at-a-time ECB decryption (Simple)](src/.py)
 
+  Using the ECB property that we exploited earlier (identical plaintext blocks
+  encrypt to identical ciphertext blocks), we can bruteforce individual bytes
+  at the end of blocks.
+
+  For example, assume that we want to bruteforce the (unknown) plaintext:
+  `hello this is a test`.
+
+  At first, we want to isolate the first character (`h`, but we don't know that
+  yet) at the end of a block, through a prefix of `A`s. Like this:
+
+  ```
+  AAAAAAAAAAAAAAAh
+  ```
+
+  We get the encrypted result of this (call this `C0`). We can try all
+  possible bytes that could follow our prefix, like the following:
+
+  ```
+  AAAAAAAAAAAAAAAa
+  AAAAAAAAAAAAAAAb
+  AAAAAAAAAAAAAAAc
+  ...
+  ```
+
+  Eventually, we will get an encrypted block that will match `C0`, and thus
+  we will know the first byte of our plaintext.
+
+  We can bruteforce the second byte (`e`) similarly. We start by getting `C1`:
+
+  ```
+  AAAAAAAAAAAAAAhe
+  ```
+
+  Then by trying all possible bytes:
+
+  ```
+  AAAAAAAAAAAAAAha
+  AAAAAAAAAAAAAAhb
+  AAAAAAAAAAAAAAhc
+  ...
+  ```
+
+  And so on, for all bytes in the first block.
+
+  For the following blocks, the idea is the same, but a little more thought must
+  be put into *where* we get our `Ci` and what should be put as a prefix.
+
+  The block `Ci` is merely the index of the block we already are at with the
+  *next* byte that we want to bruteforce. The reason is quite simple: with our
+  padding, we will only be pushing that byte at the end of its current block,
+  not produce a next block.
+
+  The padding only has to be enough to put the next bruteforced byte at the end
+  of a block. When bruteforcing, however, the bytes before the tried byte must
+  be the last 15 (blocksize - 1) known bytes, to fit `Ci`.
+
+  This is all clearer through an example:
+
+  ```
+  plaintext:    hello this is a (...unknown....)
+                |---block 0----||---block 1----|
+  bruteforcing: t (unknown yet)
+
+  we will pad with As:
+  padded:       AAAAAAAAAAAAAAAhello this is a t(...unknown....)
+                |---block 0----||---block 1----||---block 2----|
+  Ci = block 1
+
+  Bruteforce tries: ello this is a a
+                    ello this is a b
+                    ello this is a c
+                    ...
+  ```
+
 - [x] [13. ECB cut-and-paste](src/.py)
 
 - [x] [14. Byte-at-a-time ECB decryption (Harder)](src/.py)
