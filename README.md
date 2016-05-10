@@ -97,6 +97,11 @@ convenience.*
 
 - [x] [12. Byte-at-a-time ECB decryption (Simple)](src/.py)
 
+  Detecting the blocksize is relatively easy. We start by noting
+  `len(ciphertext)`. We continue adding prefix bytes until we notice a change in
+  `len(ciphertext)`. When that happens, it means that we have crossed a block
+  boundary and we know the blocksize to be `len(after) - len(start)`.
+
   Using the ECB property that we exploited earlier (identical plaintext blocks
   encrypt to identical ciphertext blocks), we can bruteforce individual bytes
   at the end of blocks.
@@ -162,7 +167,7 @@ convenience.*
                 |---block 0----||---block 1----|
   bruteforcing: t (unknown yet)
 
-  we will pad with As:
+  We will pad with As:
   padded:       AAAAAAAAAAAAAAAhello this is a t(...unknown....)
                 |---block 0----||---block 1----||---block 2----|
   Ci = block 1
@@ -172,6 +177,19 @@ convenience.*
                     ello this is a c
                     ...
   ```
+
+  We repeat the steps up until the point we reach the last block. At this point,
+  we will eventually hit the padding.
+  
+  If the padding happens to be 1 byte, we will successfully find it (this is
+  just like bruteforcing the last byte, that just happens to be `0x01`).
+
+  If the padding is anything else, we will first successfully "bruteforce" a
+  `0x01` in the plaintext (because we will be padding the plaintext until it is
+  only missing a byte, so it will be padded with `0x01`). Then, we will try to
+  bruteforce the next byte, but fail. The reason is that the padding will now be
+  `[0x02, 0x02]`, while we are trying `[0x01, 0x??]`. Once that happens, we know
+  that we have successfully bruteforced the whole plaintext. :tada:
 
 - [x] [13. ECB cut-and-paste](src/.py)
 

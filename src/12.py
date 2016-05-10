@@ -140,6 +140,7 @@ for _ in range(bytes_count):
             break
 
     if not found_match:  # no byte matched => last byte was a padding byte
+        assert(plaintext[-1] == 0x1)
         plaintext = plaintext[:-1]  # remove that matched padding byte
         break  # we are done!
 
