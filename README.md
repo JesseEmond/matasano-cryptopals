@@ -178,18 +178,19 @@ convenience.*
                     ...
   ```
 
-  We repeat the steps up until the point we reach the last block. At this point,
-  we will eventually hit the padding.
+  We repeat the steps up until the point where we reach the last block. Then, we
+  will eventually hit the padding.
   
   If the padding happens to be 1 byte, we will successfully find it (this is
-  just like bruteforcing the last byte, that just happens to be `0x01`).
+  just like bruteforcing a normal byte that just happens to be `0x01`).
 
   If the padding is anything else, we will first successfully "bruteforce" a
   `0x01` in the plaintext (because we will be padding the plaintext until it is
   only missing a byte, so it will be padded with `0x01`). Then, we will try to
   bruteforce the next byte, but fail. The reason is that the padding will now be
   `[0x02, 0x02]`, while we are trying `[0x01, 0x??]`. Once that happens, we know
-  that we have successfully bruteforced the whole plaintext. :tada:
+  that we have successfully bruteforced the whole plaintext. We can remove our
+  undesirable bruteforced `0x01` padding and enjoy reading our plaintext. :tada:
 
 - [x] [13. ECB cut-and-paste](src/.py)
 
