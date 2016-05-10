@@ -75,7 +75,7 @@ convenience.*
   pad('') = '\x10' * 16
   ```
 
-- [x] [10. Implement CBC mode](src/.py)
+- [x] [10. Implement CBC mode](src/10.py)
 
   [Wikipedia](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_.28CBC.29)'s
   image on the matter is enough of a description to implement this. Basically,
@@ -83,7 +83,7 @@ convenience.*
   the first block). The result is that 2 identical plaintext blocks will no
   longer automatically encrypt to the same ciphertext block (compared to ECB).
 
-- [x] [11. An ECB/CBC detection oracle](src/.py)
+- [x] [11. An ECB/CBC detection oracle](src/11.py)
 
   When using ECB, two identical plaintext blocks will encrypt to the same
   ciphertext block.
@@ -95,7 +95,7 @@ convenience.*
   consider the ciphertext to be encrypted using ECB. Otherwise, we consider that
   it used CBC.
 
-- [x] [12. Byte-at-a-time ECB decryption (Simple)](src/.py)
+- [x] [12. Byte-at-a-time ECB decryption (Simple)](src/12.py)
 
   Detecting the blocksize is relatively easy. We start by noting
   `len(ciphertext)`. We continue adding prefix bytes until we notice a change in
@@ -192,7 +192,7 @@ convenience.*
   that we have successfully bruteforced the whole plaintext. We can remove our
   undesirable bruteforced `0x01` padding and enjoy reading our plaintext. :tada:
 
-- [x] [13. ECB cut-and-paste](src/.py)
+- [x] [13. ECB cut-and-paste](src/13.py)
 
   Using the same exploitable ECB property as before, we craft multiple messages
   and pick-and-choose the parts that we want.
@@ -221,11 +221,32 @@ convenience.*
 
   Which grants us admin access to log in.
 
-- [x] [14. Byte-at-a-time ECB decryption (Harder)](src/.py)
+- [x] [14. Byte-at-a-time ECB decryption (Harder)](src/14.py)
 
-- [x] [15. PKCS#7 padding validation](src/.py)
+  This attack is the same as the challenge #12, but with some required initial
+  work, offsets and padding to apply.
 
-- [x] [16. CBC bitflipping attacks](src/.py)
+  We first need to find out how long the prefix is. We do this by generating 2
+  blocks of fixed data (e.g. `[0xA] * 32`) and gradually increasing the size of
+  the fixed data until we find 2 neighbour duplicate blocks in the ciphertext
+  (to make sure that we don't just have identical blocks because the prefix
+  happened to end with our fixed value, we can try with 2 different fixed
+  values, e.g. `[0] * 32` and `[1] * 32`).
+  
+  Then, one can use the index where the duplicate blocks begin to find where the
+  first block after the prefix starts. With that information, we can find the
+  amount of padding that was required to pad the prefix to a multiple of
+  blocksize through `len(fixed_data) - 2 * blocksize`. The length of the prefix
+  is then `index of first of the duplicates - padding length`.
+
+  With the length of the prefix, we just use our algorithm from challenge #12,
+  but prefixing our input with some padding to pad the prefix to a blocksize
+  multiple. We also need to offset any index in the produced ciphertext by the
+  amount of blocks in the prefix.
+
+- [x] [15. PKCS#7 padding validation](src/15.py)
+
+- [x] [16. CBC bitflipping attacks](src/16.py)
 
 *Pending descriptions.*
 
