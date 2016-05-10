@@ -269,10 +269,10 @@ convenience.*
 
   We can calculate `next_block_pre_xor = next_plain ^ current_block`.
 
-  We want `next_block_pre_xor ^ crafter_block` to yield `target`, so we choose:
-  `crafter_block = target ^ next_block_pre_xor`.
+  We want `next_block_pre_xor ^ crafted_block` to yield `target`, so we choose:
+  `crafted_block = target ^ next_block_pre_xor`.
 
-  Then, all we need is to swap `current_block` with our `crafter_block` to get
+  Then, all we need is to swap `current_block` with our `crafted_block` to get
   admin access. The decryption of `current_block` will yield scrambled
   plaintext, but it is not a problem since it only modified `comment1`.
 
