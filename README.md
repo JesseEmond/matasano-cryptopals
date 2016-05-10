@@ -249,6 +249,10 @@ convenience.*
 
 - [x] [15. PKCS#7 padding validation](src/15.py)
 
+  We get the last byte of the plaintext as `n` and make sure that the last `n`
+  bytes of the plaintext are equal to `n`. If it is not the case, raise an
+  exception.
+
 - [x] [16. CBC bitflipping attacks](src/16.py)
 
 *Pending descriptions.*
