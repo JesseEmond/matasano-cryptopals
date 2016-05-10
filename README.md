@@ -125,7 +125,7 @@ convenience.*
   we will know the first byte of our plaintext.
 
   We can bruteforce the second byte (`e`) similarly. We start by getting `C1` by
-  encryting:
+  encrypting:
 
   ```
   AAAAAAAAAAAAAAhe
