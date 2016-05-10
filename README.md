@@ -124,7 +124,8 @@ convenience.*
   Eventually, we will get an encrypted block that will match `C0`, and thus
   we will know the first byte of our plaintext.
 
-  We can bruteforce the second byte (`e`) similarly. We start by getting `C1`:
+  We can bruteforce the second byte (`e`) similarly. We start by getting `C1` by
+  encryting:
 
   ```
   AAAAAAAAAAAAAAhe
@@ -139,7 +140,8 @@ convenience.*
   ...
   ```
 
-  And so on, for all bytes in the first block.
+  Until we find a block that encrypts to `C1`. And so on, for all bytes in the
+  first block.
 
   For the following blocks, the idea is the same, but a little more thought must
   be put into *where* we get our `Ci` and what should be put as a prefix.
