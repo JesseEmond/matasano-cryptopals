@@ -39,6 +39,7 @@ def get_blocks(bytes_, blocksize=16):
 
 
 def cbc_encrypt(key, iv, plaintext):
+    assert(len(iv) == 16)
     blocks = get_blocks(pad(plaintext))
     ciphertext = bytearray()
 
@@ -51,6 +52,7 @@ def cbc_encrypt(key, iv, plaintext):
 
 
 def cbc_decrypt(key, iv, ciphertext):
+    assert(len(iv) == 16)
     blocks = get_blocks(ciphertext)
     plaintext = bytearray()
 
