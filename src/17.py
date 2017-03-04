@@ -2,31 +2,26 @@ from aes import (cbc_encrypt, cbc_decrypt, BadPaddingException, get_blocks,
                  xor_bytes, unpad)
 
 from os import urandom
-from random import SystemRandom
 from base64 import b64encode, b64decode
 
 
-random = SystemRandom()
 SECRETS = [
-    "MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=",
-    "MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJl" +
-    "HB1bXBpbic=",
-    "MDAwMDAyUXVpY2sgdG8gdGhlIHBvaW50LCB0byB0aGUgcG9pbnQsIG5vIGZha2luZw==",
-    "MDAwMDAzQ29va2luZyBNQydzIGxpa2UgYSBwb3VuZCBvZiBiYWNvbg==",
-    "MDAwMDA0QnVybmluZyAnZW0sIGlmIHlvdSBhaW4ndCBxdWljayBhbmQgbmltYmxl",
-    "MDAwMDA1SSBnbyBjcmF6eSB3aGVuIEkgaGVhciBhIGN5bWJhbA==",
-    "MDAwMDA2QW5kIGEgaGlnaCBoYXQgd2l0aCBhIHNvdXBlZCB1cCB0ZW1wbw==",
-    "MDAwMDA3SSdtIG9uIGEgcm9sbCwgaXQncyB0aW1lIHRvIGdvIHNvbG8=",
-    "MDAwMDA4b2xsaW4nIGluIG15IGZpdmUgcG9pbnQgb2g=",
-    "MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93"
-    ]
+"MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=",
+"MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=",
+"MDAwMDAyUXVpY2sgdG8gdGhlIHBvaW50LCB0byB0aGUgcG9pbnQsIG5vIGZha2luZw==",
+"MDAwMDAzQ29va2luZyBNQydzIGxpa2UgYSBwb3VuZCBvZiBiYWNvbg==",
+"MDAwMDA0QnVybmluZyAnZW0sIGlmIHlvdSBhaW4ndCBxdWljayBhbmQgbmltYmxl",
+"MDAwMDA1SSBnbyBjcmF6eSB3aGVuIEkgaGVhciBhIGN5bWJhbA==",
+"MDAwMDA2QW5kIGEgaGlnaCBoYXQgd2l0aCBhIHNvdXBlZCB1cCB0ZW1wbw==",
+"MDAwMDA3SSdtIG9uIGEgcm9sbCwgaXQncyB0aW1lIHRvIGdvIHNvbG8=",
+"MDAwMDA4b2xsaW4nIGluIG15IGZpdmUgcG9pbnQgb2g=",
+"MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93"]
 
 KEY = urandom(16)
 
-
-def get_secret():
+def get_secret(secret):
     iv = urandom(16)
-    secret = b64decode(random.choice(SECRETS))
+    secret = b64decode(secret)
     return iv, cbc_encrypt(KEY, iv, secret)
 
 
@@ -158,14 +153,15 @@ def get_expected_padding_byte(known_pre_xor):
     return len(known_pre_xor) + 1
 
 
-iv, secret = get_secret()
+for secret in SECRETS:
+    iv, secret = get_secret(secret)
 
-blocks = [bytes(iv)] + get_blocks(secret)
-decrypted_blocks = [decrypt_block(padding_oracle, blocks[i-1], blocks[i])
-                    for i in range(1, len(blocks))]
+    blocks = [bytes(iv)] + get_blocks(secret)
+    decrypted_blocks = [decrypt_block(padding_oracle, blocks[i-1], blocks[i])
+                        for i in range(1, len(blocks))]
 
-padded_plaintext = b"".join(decrypted_blocks)
-plaintext = unpad(padded_plaintext)
+    padded_plaintext = b"".join(decrypted_blocks)
+    plaintext = unpad(padded_plaintext)
 
-print(plaintext.decode('ascii'))
-assert(b64encode(plaintext).decode('ascii') in SECRETS)
+    print(plaintext.decode('ascii'))
+    assert(b64encode(plaintext).decode('ascii') in SECRETS)
