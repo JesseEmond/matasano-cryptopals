@@ -325,10 +325,12 @@ convenience.*
 
 - [x] [18. Implement CTR, the stream cipher mode](src/18.py)
 
-  There isn't much to say here... We generated a keystream with:
+  There isn't much to say here... We generate a keystream with:
   
-  `aes(key, nonce + counter)`, where `nonce` and `counter` are encoded in
-  little-endian and `counter` is the amount of blocks generated so far.
+  `aes(key, nonce + counter)`
+  
+  Where `nonce` and `counter` are 64-bits integers encoded in little-endian and
+  `counter` is the amount of blocks generated so far.
 
 - [ ] [19. Break fixed-nonce CTR mode using substitutions](src/19.py)
 
