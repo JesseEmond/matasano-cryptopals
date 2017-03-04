@@ -95,8 +95,7 @@ def bruteforce_pre_xor_byte(oracle, known_pre_xor, current_block):
     padding_byte = get_expected_padding_byte(known_pre_xor)
     for byte in range(256):
         expected_padding = bytes([padding_byte] * padding_byte)
-        padding_ending = xor_bytes(expected_padding[:-1],
-                                   known_pre_xor)
+        padding_ending = xor_bytes(expected_padding[:-1], known_pre_xor)
 
         padding = bytes([byte]) + padding_ending
         assert(len(padding) == len(expected_padding))
@@ -112,10 +111,9 @@ def bruteforce_pre_xor_byte(oracle, known_pre_xor, current_block):
 
 def determine_last_pre_xor_byte(oracle, valid_bytes, current_block):
     """
-    When bruteforcing the last byte of a block, we have a very good chance of
-    finding 2 pre_xor bytes that will give valid padding (especially when
-    bruteforcing the last block -- the one with the real padding of the
-    original plaintext).
+    When bruteforcing the last byte of a block, we have a chance of finding 2
+    pre_xor bytes that will give valid padding (especially when bruteforcing
+    the last block -- the one with the real padding of the original plaintext).
 
     E.g.
     With the block: ...55555
@@ -134,7 +132,7 @@ def determine_last_pre_xor_byte(oracle, valid_bytes, current_block):
     - the pre_xor byte that produces ...55541
     - the pre_xor byte that produces ...55545
 
-    Only the first one is valid padding.
+    Only the first one has valid padding.
     """
     verified_byte = None
     for byte in valid_bytes:
@@ -154,9 +152,9 @@ def get_expected_padding_byte(known_pre_xor):
 
 
 for secret in SECRETS:
-    iv, secret = get_secret(secret)
+    iv, encrypted = get_secret(secret)
 
-    blocks = [bytes(iv)] + get_blocks(secret)
+    blocks = [bytes(iv)] + get_blocks(encrypted)
     decrypted_blocks = [decrypt_block(padding_oracle, blocks[i-1], blocks[i])
                         for i in range(1, len(blocks))]
 
@@ -164,4 +162,4 @@ for secret in SECRETS:
     plaintext = unpad(padded_plaintext)
 
     print(plaintext.decode('ascii'))
-    assert(b64encode(plaintext).decode('ascii') in SECRETS)
+    assert(b64encode(plaintext).decode('ascii') == secret)

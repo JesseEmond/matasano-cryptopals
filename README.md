@@ -278,4 +278,46 @@ convenience.*
 
 ## Set 3: Block & stream crypto
 
+- [x] [17. The CBC padding oracle](src/17.py)
+  If we have an oracle that tells us if the padding on a ciphertext is valid or
+  not, we are able to recover the plaintext.
+
+  Keep in mind that decryption happens like this:
+  ```
+  block_pre_xor xxxxxxxxxxxxxxxx ^
+     prev_block pppppppppppppppp =
+      plaintext tttttttttttttttt
+  ```
+
+  We can play with the `prev_block` to search for a byte that results in valid
+  padding:
+  ```
+  block_pre_xor xxxxxxxxxxxxxxx? ^
+     prev_block pppppppppppppppB = (we bruteforce 'B')
+      plaintext ttttttttttttttt1
+  ```
+
+  Once we have the `prev_block` byte that gives valid padding, we can deduce
+  `pre_xor` byte `?`. Then, we just xor that with our real `prev_block` and 
+  we find the plaintext.
+
+  Once we know the last `N` bytes of the `pre_xor`, we can use that information
+  to craft the ending of the padding in just the right way to bruteforce the
+  `N+1`th byte (starting from the right).
+
+  However, must keep the following tricky thing in mind:
+  The last block (and other plaintext blocks, if we're unlucky) can produce two
+  valid `pre_xor` bytes, instead of just one:
+  E.g. block `...55555`
+  We'll find these 2 valid `pre_xor` bytes:
+  - the one that produces `...55551`
+  - the one that produces `...55555`
+
+  When this happens, we can just alter the 2nd last byte to produce junk, so
+  that *only* the padding ending with a `1` will pass:
+  E.g. changing `5` to `4`
+  - the `pre_xor` that produces `...55541` passes
+  - the `pre_xor` that produces `...55545` **does not**
+
+
 *In progress.*
