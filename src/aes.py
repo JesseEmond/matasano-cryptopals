@@ -64,6 +64,21 @@ def cbc_decrypt(key, iv, ciphertext):
     return unpad(bytes(plaintext))
 
 
+def ctr_encrypt(key, nonce, plaintext):
+    nonce = nonce.to_bytes(8, byteorder='little')
+    keystream = bytes()
+    block_count = 0
+    while len(keystream) < len(plaintext):
+        block = nonce + block_count.to_bytes(8, byteorder='little')
+        keystream += aes_encrypt_block(key, block)
+        block_count += 1
+    return xor_bytes(plaintext, keystream)
+
+
+def ctr_decrypt(key, nonce, ciphertext):
+    return ctr_encrypt(key, nonce, ciphertext)
+
+
 def pad(bytes_, block_size=16):
     padding = block_size - len(bytes_) % block_size
     return bytes_ + bytes([padding] * padding)
@@ -84,3 +99,10 @@ def unpad(bytes_, block_size=16):
 
 if __name__ == "__main__":
     assert(pad(bytes()) == bytes([16] * 16))
+    key = "YELLOW SUBMARINE".encode('ascii')
+    msg = "this is a test please work".encode('ascii')
+    iv = b"\x00" * 16
+    nonce = 0
+    assert(ecb_decrypt(key, ecb_encrypt(key, msg)) == msg)
+    assert(cbc_decrypt(key, iv, cbc_encrypt(key, iv, msg)) == msg)
+    assert(ctr_decrypt(key, nonce, ctr_encrypt(key, nonce, msg)) == msg)
