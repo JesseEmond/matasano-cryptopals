@@ -279,6 +279,7 @@ convenience.*
 ## Set 3: Block & stream crypto
 
 - [x] [17. The CBC padding oracle](src/17.py)
+
   If we have an oracle that tells us if the padding on a ciphertext is valid or
   not, we are able to recover the plaintext.
 
@@ -298,14 +299,17 @@ convenience.*
   ```
 
   Once we have the `prev_block` byte that gives valid padding, we can deduce
-  `pre_xor` byte `?`. Then, we just xor that with our real `prev_block` and 
-  we find the plaintext.
+  `pre_xor` byte `?`.
 
   Once we know the last `N` bytes of the `pre_xor`, we can use that information
   to craft the ending of the padding in just the right way to bruteforce the
   `N+1`th byte (starting from the right).
 
-  However, must keep the following tricky thing in mind:
+  With all the `pre_xor` bytes recovered from a block, we can XOR them with
+  out real `prev_block` to find the plaintext.
+
+  However, we must keep the following tricky thing in mind:
+
   The last block (and other plaintext blocks, if we're unlucky) can produce two
   valid `pre_xor` bytes, instead of just one:
   E.g. block `...55555`
