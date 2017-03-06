@@ -7,6 +7,5 @@ def xor_single_char_key(msg, key):
 
 
 def xor_repeating_key(msg, key):
-    repeats = len(msg) // len(key)
-    leftover = len(msg) % len(key)
+    repeats, leftover = divmod(len(msg), len(key))
     return xor_bytes(msg, bytes(key * repeats + key[:leftover]))
