@@ -2,8 +2,7 @@ from os import urandom
 from base64 import b64decode
 
 from aes import ctr_encrypt
-from frequency import english_test
-from xor import xor_single_char_key, xor_bytes
+from xor import xor_bytes, rank_xor_char_keys
 
 
 secrets = """SSBoYXZlIG1ldCB0aGVtIGF0IGNsb3NlIG9mIGRheQ==
@@ -71,14 +70,9 @@ keystream = bytearray()
 while max(len(s) for s in secrets) > len(keystream):
     index = len(keystream)
     chars = [s[index] for s in secrets if len(s) > index]
-    key_space = bytes(range(256))
-    # sort using a tuple to get deterministic results
-    key_bytes = sorted(key_space,
-                       key=lambda k:
-                           (english_test(xor_single_char_key(chars, k)), chars[0] ^ k),
-                       reverse=True)
+    keys = rank_xor_char_keys(chars)
     key_byte_index = key_bytes_index.get(index, 0)
-    key_byte = key_bytes[key_byte_index]
+    key_byte = keys[key_byte_index]
     keystream.append(key_byte)
 
 

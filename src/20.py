@@ -13,3 +13,8 @@ with open("20.txt") as f:
 secrets = [b64decode(secret) for secret in secrets]
 expected = secrets
 secrets = [ctr_encrypt(key, nonce, secret) for secret in secrets]
+
+min_length = min(len(secret) for secret in secrets)
+truncated = [secret[:min_length] for secret in secrets]
+
+concatenated = "".join(truncated)
