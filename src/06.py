@@ -1,6 +1,6 @@
 from distance import hamming
 from base64 import b64decode
-from xor import xor_single_char_key, xor_repeating_key
+from xor import xor_single_char_key, xor_repeating_key, break_xor_char_key
 from frequency import english_test
 
 
@@ -21,16 +21,9 @@ def brute(cipher):
     blocks = [cipher[i * size:(i+1) * size]
               for i in range(len(cipher) // size)]
     nth_bytes = zip(*blocks)
-    key = [break_single_char(bytes_) for bytes_ in nth_bytes]
+    key = [break_xor_char_key(bytes_) for bytes_ in nth_bytes]
 
     return bytes(key)
-
-
-def break_single_char(cipher):
-    keyspace = range(256)
-    decrypted = [(key, xor_single_char_key(cipher, key)) for key in keyspace]
-    best = max(decrypted, key=lambda pair: english_test(pair[1]))
-    return best[0]
 
 
 with open("06.txt") as f:

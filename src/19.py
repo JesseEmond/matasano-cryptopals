@@ -47,6 +47,7 @@ SGUsIHRvbywgaGFzIGJlZW4gY2hhbmdlZCBpbiBoaXMgdHVybiw=
 VHJhbnNmb3JtZWQgdXR0ZXJseTo=
 QSB0ZXJyaWJsZSBiZWF1dHkgaXMgYm9ybi4=""".split()
 secrets = [b64decode(secret) for secret in secrets]
+expected = secrets
 
 key = urandom(16)
 nonce = 0
@@ -81,52 +82,11 @@ while max(len(s) for s in secrets) > len(keystream):
     keystream.append(key_byte)
 
 
-plaintexts = [xor_bytes(secret, keystream).decode('ascii')
+plaintexts = [xor_bytes(secret, keystream)
               for secret in secrets]
-for plaintext in plaintexts:
-    print(plaintext)
 
-expected = """I have met them at close of day
-Coming with vivid faces
-From counter or desk among grey
-Eighteenth-century houses.
-I have passed with a nod of the head
-Or polite meaningless words,
-Or have lingered awhile and said
-Polite meaningless words,
-And thought before I had done
-Of a mocking tale or a gibe
-To please a companion
-Around the fire at the club,
-Being certain that they and I
-But lived where motley is worn:
-All changed, changed utterly:
-A terrible beauty is born.
-That woman's days were spent
-In ignorant good will,
-Her nights in argument
-Until her voice grew shrill.
-What voice more sweet than hers
-When young and beautiful,
-She rode to harriers?
-This man had kept a school
-And rode our winged horse.
-This other his helper and friend
-Was coming into his force;
-He might have won fame in the end,
-So sensitive his nature seemed,
-So daring and sweet his thought.
-This other man I had dreamed
-A drunken, vain-glorious lout.
-He had done most bitter wrong
-To some who are near my heart,
-Yet I number him in the song;
-He, too, has resigned his part
-In the casual comedy;
-He, too, has been changed in his turn,
-Transformed utterly:
-A terrible beauty is born.""".split('\n')
-
+assert(len(plaintexts) == len(expected))
 for i in range(len(expected)):
+    print(plaintexts[i])
     assert(plaintexts[i] == expected[i])
 assert(plaintexts == expected)
