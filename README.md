@@ -341,7 +341,13 @@ convenience.*
 
   As mentioned by the challenge description, this is a bit manual indeed.
 
-- [ ] [20. Break fixed-nonce CTR statistically](src/20.py)
+- [x] [20. Break fixed-nonce CTR statistically](src/20.py)
+
+  Very similar to the previous challenge, except that we can heavily reuse code
+  that we've written before.
+
+
+- [ ] [21. Implement the MT19937 Mersenne Twister RNG](src/21.py)
 
 
 *In progress.*
