@@ -332,6 +332,16 @@ convenience.*
   Where `nonce` and `counter` are 64-bits integers encoded in little-endian and
   `counter` is the amount of blocks generated so far.
 
-- [ ] [19. Break fixed-nonce CTR mode using substitutions](src/19.py)
+- [x] [19. Break fixed-nonce CTR mode using substitutions](src/19.py)
+
+  We reuse our `english_test` function and pick the key that has the best
+  score. In some cases, we pick a key that is not as good as some others
+  because we notice (by analysis of the plaintexts obtained) that the key
+  is not the right one.
+
+  As mentioned by the challenge description, this is a bit manual indeed.
+
+- [ ] [20. Break fixed-nonce CTR statistically](src/20.py)
+
 
 *In progress.*
