@@ -26,7 +26,8 @@ def is_admin(token):
     cookie = cbc_decrypt(KEY, IV, token).decode('latin-1')
     fields = cookie.split(';')
     items = [(key, unescape(value)) for key, value in
-             (field.split('=') for field in fields)]
+             (field.split('=', maxsplit=1) for field in fields
+              if "=" in field)]
     return any([item == ('admin', 'true') for item in items])
 
 
