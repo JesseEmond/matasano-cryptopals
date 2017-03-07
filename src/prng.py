@@ -40,7 +40,7 @@ class MT19937:
         self.index = 0
 
 
-rand = MT19937(0)
+random = MT19937
 
 # Apparently CPython's random does not allow us to seed with an int like
 # this... It does the same treatment for 32-bit ints that it does to
@@ -48,6 +48,7 @@ rand = MT19937(0)
 # https://hg.python.org/cpython/file/tip/Modules/_randommodule.c
 
 # Values extracted with C++'s std::mt19937
-assert(rand.random() == 2357136044)
-for _ in range(1000): rand.random()
-assert(rand.random() == 1193028842)
+_rand = random(0)
+assert(_rand.random() == 2357136044)
+for _ in range(1000): _rand.random()
+assert(_rand.random() == 1193028842)
