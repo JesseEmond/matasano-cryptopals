@@ -347,7 +347,27 @@ convenience.*
   that we've written before.
 
 
-- [ ] [21. Implement the MT19937 Mersenne Twister RNG](src/21.py)
+- [x] [21. Implement the MT19937 Mersenne Twister RNG](src/21.py)
+
+    This task surprisingly took a little longer than just copying Wikipedia's
+    pseudocode. I spent some time wondering why Python's random would yield
+    different numbers (and state!) from me, so I investigated.
+    
+    I compared with C++'s std::mt19937, which yielded the same results as
+    me. I couldn't find posts complaining about this specifically so I took a
+    look at [CPython's source](https://hg.python.org/cpython/file/3.4/Lib/random.py).
+    It turns out that the
+    [underlying C module](https://hg.python.org/cpython/file/tip/Modules/_randommodule.c)
+    seeds in a different way from what we see on Wikipedia. It assumes that
+    the seed could be greater than 32-bits and just uses all of the bits of
+    the seed in a different procedure. The result: it ends up with a
+    different state from us.
+    
+    Just to make sure I looked at how `numpy`'s random and it does generate
+    the same state as us when seeding. Therefore, the tests for this one use
+    values that I extracted with C++'s implementation.
+
+- [ ] [22. Crack an MT19937 seed](src/22.py)
 
 
 *In progress.*
