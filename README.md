@@ -372,6 +372,44 @@ convenience.*
   Pretty straightforward. Bruteforce all sensible seeds (a couple of seconds
   in the past) and pick the one that matches.
 
-- [ ] [23. Clone an MT19937 RNG from its output](src/23.py)
+- [x] [23. Clone an MT19937 RNG from its output](src/23.py)
+
+  The state is directly coming from the next output, so it is really easy to
+  recover the next state from a given output.
+
+  Essentially, we need to look at `624` transformations of the state to fully
+  recover the MT state:
+
+  ```
+  state = [untemper(output) for output in outputs[-624:]]
+  ```
+
+  Our `untemper` needs to reverse the right and left shift operations.
+
+  Let's look at a case with 8-bits: `y = 10101010`
+
+  If we're shifting right by 3 bits, we'll do the following:
+
+  ```
+  10101010 y
+  00010101 y >> 3
+  10111111 y ^ y >> 3
+  ```
+  
+  We notice that the first 3 bits of the result will match the first 3 bits of
+  the original `y`. Then, those original 3 bits will be used (once shifted) to
+  xor with the original `y`. By using the known first 3 bits, we can recover
+  the next 3 bits of `y` by doing this:
+
+  ```
+  10111111 y ^ y >> 3
+  00010100 known_bits >> 3
+  10101011 (y ^ y >> 3) ^ (known_bits >> 3)
+  ```
+
+  We can then recover the whole `y` this way. The left shift is very similar,
+  but we `&` with a constant before xoring.
+
+- [ ] [24. Create the MT19937 stream cipher and break it](src/24.py)
 
 *In progress.*
