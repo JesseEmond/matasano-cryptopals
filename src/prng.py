@@ -19,11 +19,14 @@ class MT19937:
             self._twist()
 
         y = self._mt[self.index]
+        prev = y
 
         y ^= y >> 11
         y ^= y << 7 & 2636928640
         y ^= y << 15 & 4022730752
         y ^= y >> 18
+
+        assert(untemper(y) == prev)
 
         self.index += 1
 
@@ -40,7 +43,71 @@ class MT19937:
         self.index = 0
 
 
+def clone_mt19937(outputs):
+    assert(len(outputs) >= 624)
+    r = random(0)
+    r._mt = [untemper(output) for output in outputs[-624:]]
+    return r
+
+def untemper(y):
+    y = _untemper_right(y, 18)
+    y = _untemper_left(y, 15, 4022730752)
+    y = _untemper_left(y, 7, 2636928640)
+    y = _untemper_right(y, 11)
+    return _int32(y)
+
+def _untemper_right(y, bits):
+    """
+    8-bits example:
+    10101010 y
+    00010101 y >> 3
+    10111111 y' = y ^ y >> 3
+
+    We know the first 3 bits of y' are the same as y's.
+    We know these need to be xored with the next 3 bits of y'.
+    From the result, we get the second 3 bits of y.
+    We can repeat for all the bits up until the point that we go through all
+    of y.
+    """
+    mask = ((1 << bits) - 1) << (32 - bits)
+    original = y
+    to_xor = 0
+    while mask > 0:
+        original ^= to_xor
+        original_bits = original & mask
+        mask >>= bits
+        to_xor = original_bits >> bits
+    return original
+
+def _untemper_left(y, bits, const):
+    """
+    8-bits example:
+    10101010 y
+    01010000 y << 3
+    00011000 &
+    10111010 y'
+    """
+    mask = (1 << bits) - 1
+    original = y
+    to_xor = 0
+    while mask & 0xFFFFFFFF > 0:
+        original ^= to_xor & const
+        original_bits = original & mask
+        mask <<= bits
+        to_xor = original_bits << bits
+    return original
+
 random = MT19937
+
+_y = 0xABCDEF01
+_c = 2636928640
+assert(_untemper_right(_y ^ _y >> 18, 18) == _y)
+assert(_untemper_left(_y ^ _y << 7 & _c, 7, _c) == _y)
+
+_r = random(12)
+_out = [_r.random() for _ in range(1000)]
+_clone = clone_mt19937(_out)
+assert(_clone.random() == _r.random())
 
 # Apparently CPython's random does not allow us to seed with an int like
 # this... It does the same treatment for 32-bit ints that it does to
