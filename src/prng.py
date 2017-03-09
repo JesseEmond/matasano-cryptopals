@@ -26,8 +26,6 @@ class MT19937:
         y ^= y << 15 & 4022730752
         y ^= y >> 18
 
-        assert(untemper(y) == prev)
-
         self.index += 1
 
         return _int32(y)
@@ -38,7 +36,7 @@ class MT19937:
                        (self._mt[(i+1) % 624] & 0x7fffffff))
             self._mt[i] = self._mt[(i + 397) % 624] ^ y >> 1
 
-            if y % 2 != 0:
+            if y & 1 == 1:
                 self._mt[i] ^= 0x9908b0df
         self.index = 0
 
