@@ -410,6 +410,12 @@ convenience.*
   We can then recover the whole `y` this way. The left shift is very similar,
   but we `&` with a constant before xoring.
 
-- [ ] [24. Create the MT19937 stream cipher and break it](src/24.py)
+- [x] [24. Create the MT19937 stream cipher and break it](src/24.py)
+
+  This challenge was very similar to challenge 22. Basically, we bruteforce the
+  seed space to find one that gives an expected decryption/token.
+
+
+## Set 4: Stream crypto and randomness
 
 *In progress.*
