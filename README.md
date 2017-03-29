@@ -418,4 +418,11 @@ convenience.*
 
 ## Set 4: Stream crypto and randomness
 
+- [x] [25. Break "random access read/write" AES CTR](src/25.py)
+
+  Here we're doing a terrible mistake: we are reusing our keystream on a
+  different plaintext. Solution? We provide `00000000...` and it gets directly
+  xored with the keystream (yielding the keystream). We xor that with the
+  original ciphertext and we get the secret back!
+
 *In progress.*
