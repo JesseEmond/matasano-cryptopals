@@ -425,4 +425,9 @@ convenience.*
   xored with the keystream (yielding the keystream). We xor that with the
   original ciphertext and we get the secret back!
 
+- [x] [26. CTR bitflipping](src/26.py)
+
+  This one is really straightforward. We know the plaintext, so we can find the
+  keystream and use it to encrypt our token the way that we want.
+
 *In progress.*
