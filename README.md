@@ -430,4 +430,22 @@ convenience.*
   This one is really straightforward. We know the plaintext, so we can find the
   keystream and use it to encrypt our token the way that we want.
 
+- [x] [27. Recover the key from CBC with IV=Key](src/27.py)
+
+  When we split the obtained ciphertext in 3 blocks:
+  ```
+  C1, C2, C3
+  ```
+
+  We can then produce a ciphertext in the following way:
+  ```
+  C1, 0, C1
+  ```
+
+  and capture the produced plaintext from the error message.
+
+  This means that `P1` is the result of `KEY ^ P3` (since `P3` is unchanged by
+  xoring with `0`). We can recover the key through: 
+  `P1 ^ P3 = (P3 ^ KEY) ^ P3 = KEY`.
+
 *In progress.*
