@@ -451,4 +451,7 @@ convenience.*
 - [x] [28. Implement a SHA-1 keyed MAC](src/28.py)
 
   Not much to do apart from adding a python sha1 implementation here...
+
+- [x] [29. Break a SHA-1 keyed MAC using length extension](src/29.py)
+
 *In progress.*
