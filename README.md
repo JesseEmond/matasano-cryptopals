@@ -448,4 +448,7 @@ convenience.*
   xoring with `0`). We can recover the key through: 
   `P1 ^ P3 = (P3 ^ KEY) ^ P3 = KEY`.
 
+- [x] [28. Implement a SHA-1 keyed MAC](src/28.py)
+
+  Not much to do apart from adding a python sha1 implementation here...
 *In progress.*
