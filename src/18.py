@@ -6,7 +6,7 @@ secret = ("L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2sy"
           "LXzhPweyyMTJULu/6/kXX0KSvoOLSFQ==")
 ciphertext = b64decode(secret)
 
-key = "YELLOW SUBMARINE"
+key = b"YELLOW SUBMARINE"
 nonce = 0
 plaintext = ctr_decrypt(key, nonce, ciphertext)
 

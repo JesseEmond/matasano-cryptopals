@@ -7,7 +7,7 @@ with open("07.txt") as f:
 
 cipher = b64decode(''.join(lines))
 
-decryption_suite = AES.new("YELLOW SUBMARINE", AES.MODE_ECB)
+decryption_suite = AES.new(b"YELLOW SUBMARINE", AES.MODE_ECB)
 msg = decryption_suite.decrypt(cipher).decode('utf-8')
 
 print(msg)
