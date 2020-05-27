@@ -450,11 +450,38 @@ convenience.*
 
 - [x] [28. Implement a SHA-1 keyed MAC](src/28.py)
 
-  Wrote implementation based on Wikipedia's pseudocode (inspired by existing implementations).
+  Wrote implementation based on Wikipedia's pseudocode (inspired by existing
+  implementations).
 
 - [x] [29. Break a SHA-1 keyed MAC using length extension](src/29.py)
 
-*TODO: writeup*
+  The final SHA-1 hash is just the `h` values directly encoded to bytes (after
+  doing the pre-processing of appending the `glue` for a given length and
+  processing all the chunks in sequence).
+
+  Thus, if we know that `SHA-1(prefix)` gives a certain digest, we know that
+  the `h` states after processing `prefix + glue(len(prefix))` will be
+  `digest`. We can inject `glue` after our prefix to know what `h` will be
+  at that point, without even knowing `prefix` (apart from its length).
+
+  If we know the length, we just need to initialize a SHA-1 instance to have
+  `h = unpacked_digest`, and `msg_len = len(prefix) + len(glue(len(prefix)))`.
+  If we `update` that SHA-1, we can then inject whatever we want.
+
+  In practice, since we don't know the length of the password (pseudocode):
+  ```
+  # Assuming we have 'digest = H(secret + msg)' and don't know 'secret'.
+  for secret_len in range(128):  # some upper-bound
+    h = unpack(digest)
+    prefix_len = secret_len + len(msg)
+    prefix_glue = glue(prefix_len)
+    msg_len = prefix_len + len(prefix_glue)
+    sha = Sha1(h=h, msg_len=msg_len)
+    new_mac = sha.update(b';admin=true')
+    new_message = msg + ';admin=true'
+    if try_message(new_message, new_mac):
+      print("Bingo! ", new_digest)
+  ```
 
 - [ ] [30. Break an MD4 keyed MAC using length extension](src/30.py)
 
