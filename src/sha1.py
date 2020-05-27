@@ -1,140 +1,95 @@
-# source: https://github.com/ajalt/python-sha1/blob/master/sha1.py
-import io
-import struct
+# Following the pseudocode on https://en.wikipedia.org/wiki/SHA-1
 
 
-def _left_rotate(n, b):
-    """Left rotate a 32-bit integer n by b bits."""
-    return ((n << b) | (n >> (32 - b))) & 0xffffffff
+def left_rotate(x, n):
+    """Left rotate a 32-bit integer x by n bits."""
+    return ((x << n) | (x >> (32 - n))) & 0xFFFFFFFF
+assert left_rotate(0b1000, 1) == 0b10000
 
-def _process_chunk(chunk, h0, h1, h2, h3, h4):
-    """Process a chunk of data and return the new digest variables."""
+
+def process_chunk(chunk, h0, h1, h2, h3, h4):
     assert len(chunk) == 64
-
     w = [0] * 80
-
-    # Break chunk into sixteen 4-byte big-endian words w[i]
     for i in range(16):
-        w[i] = struct.unpack(b'>I', chunk[i*4:i*4 + 4])[0]
-
-    # Extend the sixteen 4-byte words into eighty 4-byte words
+        w[i] = int.from_bytes(chunk[i*4:i*4 + 4], "big")
     for i in range(16, 80):
-        w[i] = _left_rotate(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1)
-    
-    # Initialize hash value for this chunk
-    a = h0
-    b = h1
-    c = h2
-    d = h3
-    e = h4
-    
+        w[i] = left_rotate(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1)
+
+    a, b, c, d, e = h0, h1, h2, h3, h4
+
     for i in range(80):
-        if 0 <= i <= 19:
-            # Use alternative 1 for f from FIPS PB 180-1 to avoid bitwise not
-            f = d ^ (b & (c ^ d))
+        if i < 20:
+            f = d ^ (b & (c ^ d))  # Alternative 1 to avoid bitwise not
             k = 0x5A827999
-        elif 20 <= i <= 39:
+        elif i < 40:
             f = b ^ c ^ d
             k = 0x6ED9EBA1
-        elif 40 <= i <= 59:
-            f = (b & c) | (b & d) | (c & d) 
+        elif i < 60:
+            f = (b & c) | (b & d) | (c & d)
             k = 0x8F1BBCDC
-        elif 60 <= i <= 79:
+        else:
             f = b ^ c ^ d
             k = 0xCA62C1D6
-    
-        a, b, c, d, e = ((_left_rotate(a, 5) + f + e + k + w[i]) & 0xffffffff, 
-                        a, _left_rotate(b, 30), c, d)
-    
-    # Add this chunk's hash to result so far
-    h0 = (h0 + a) & 0xffffffff
-    h1 = (h1 + b) & 0xffffffff 
-    h2 = (h2 + c) & 0xffffffff
-    h3 = (h3 + d) & 0xffffffff
-    h4 = (h4 + e) & 0xffffffff
+        new_a = (left_rotate(a, 5) + f + e + k + w[i]) & 0xFFFFFFFF
+        new_c = left_rotate(b, 30)
+        a, b, c, d, e = new_a, a, new_c, c, d
 
-    return h0, h1, h2, h3, h4
+    hs = (h0, h1, h2, h3, h4)
+    chunk_hs = (a, b, c, d, e)
+    return tuple((h_i + chunk_h_i) & 0xFFFFFFFF
+                 for h_i, chunk_h_i in zip(hs, chunk_hs))
 
-class Sha1Hash(object):
-    """A class that mimics that hashlib api and implements the SHA-1 algorithm."""
 
-    name = 'python-sha1'
-    digest_size = 20
-    block_size = 64
+def get_glue(msg_len):
+    """Produces the padding that should be appended to the message."""
+    glue = bytearray()
+    # Append bit '1' (0x80 because message is multiple of 8-bits)
+    glue.append(0x80)
 
-    def __init__(self):
-        # Initial digest variables
-        self._h = (
-            0x67452301,
-            0xEFCDAB89,
-            0x98BADCFE,
-            0x10325476,
-            0xC3D2E1F0,
-        )
+    # Want final_msg_len % 64 = 56.
+    new_len = msg_len + 1  # including the '1' bit added
+    missing_len = (56 - (new_len % 64)) % 64
+    glue.extend(b"\x00" * missing_len)
 
-        # bytes object with 0 <= len < 64 used to store the end of the message
-        # if the message length is not congruent to 64
-        self._unprocessed = b''
-        # Length in bytes of all data that has been processed so far
-        self._message_byte_length = 0
+    # Append the original length, as 64-bit big-endian.
+    msg_len_bits = msg_len * 8
+    glue.extend(msg_len_bits.to_bytes(8, "big"))
 
-    def update(self, arg):
-        """Update the current digest.
-        This may be called repeatedly, even after calling digest or hexdigest.
-        
-        Arguments:
-            arg: bytes, bytearray, or BytesIO object to read from.
-        """
-        if isinstance(arg, (bytes, bytearray)):
-            arg = io.BytesIO(arg)
+    return bytes(glue)
 
-        # Try to build a chunk out of the unprocessed data, if any
-        chunk = self._unprocessed + arg.read(64 - len(self._unprocessed))
 
-        # Read the rest of the data, 64 bytes at a time
-        while len(chunk) == 64:
-            self._h = _process_chunk(chunk, *self._h)
-            self._message_byte_length += 64
-            chunk = arg.read(64)
+class Sha1():
+    def __init__(self, hs=None):
+        self._h = hs or (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
+        self._unprocessed = bytearray()
+        self._msg_len = 0
 
-        self._unprocessed = chunk
+    def update(self, data):
+        self._msg_len += len(data)
+        self._unprocessed.extend(data)
+        self._process_unprocessed()
         return self
 
-
     def digest(self):
-        """Produce the final hash value (big-endian) as a bytes object"""
-        return b''.join(struct.pack(b'>I', h) for h in self._produce_digest())
+        glue = get_glue(self._msg_len)
+        self._unprocessed.extend(glue)
+        assert len(self._unprocessed) % 64 == 0
+        self._process_unprocessed()
+        assert len(self._unprocessed) == 0
+        return b"".join(h.to_bytes(4, "big") for h in self._h)
 
-    def hexdigest(self):
-        """Produce the final hash value (big-endian) as a hex string"""
-        return '%08x%08x%08x%08x%08x' % self._produce_digest()
+    def _process_unprocessed(self):
+        while len(self._unprocessed) >= 64:  # While we have chunks of 512-bits
+            self._h = process_chunk(self._unprocessed[:64], *self._h)
+            self._unprocessed = self._unprocessed[64:]
 
-    def _produce_digest(self):
-        """Return finalized digest variables for the data processed so far."""
-        # Pre-processing:
-        message = self._unprocessed
-        message_byte_length = self._message_byte_length + len(message)
+    def bootstrap(self, digest, msg_len):
+        """Bootstrap the state from an existing digest, for length-extension attacks."""
+        return self  # TODO
 
-        # append the bit '1' to the message
-        message += b'\x80'
-        
-        # append 0 <= k < 512 bits '0', so that the resulting message length (in bytes)
-        # is congruent to 56 (mod 64)
-        message += b'\x00' * ((56 - (message_byte_length + 1) % 64) % 64)
-        
-        # append length of message (before pre-processing), in bits, as 64-bit big-endian integer
-        message_bit_length = message_byte_length * 8
-        message += struct.pack(b'>Q', message_bit_length)
 
-        # Process the final chunk
-        # At this point, the length of the message is either 64 or 128 bytes.
-        h = _process_chunk(message[:64], *self._h)
-        if len(message) == 64:
-            return h
-        return _process_chunk(message[64:], *h)
-
-def sha1(data):
-    return Sha1Hash().update(data).digest()
+def sha1(message):
+    return Sha1().update(message).digest()
 
 
 assert(sha1(b"The quick brown fox jumps over the lazy dog") ==
