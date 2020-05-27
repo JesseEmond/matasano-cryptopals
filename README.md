@@ -450,8 +450,12 @@ convenience.*
 
 - [x] [28. Implement a SHA-1 keyed MAC](src/28.py)
 
-  Not much to do apart from adding a python sha1 implementation here...
+  Wrote implementation based on Wikipedia's pseudocode (inspired by existing implementations).
 
 - [x] [29. Break a SHA-1 keyed MAC using length extension](src/29.py)
 
-*In progress.*
+*TODO: writeup*
+
+- [ ] [30. Break an MD4 keyed MAC using length extension](src/30.py)
+
+*TODO: challenge*

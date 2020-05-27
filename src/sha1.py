@@ -59,10 +59,10 @@ def get_glue(msg_len):
 
 
 class Sha1():
-    def __init__(self, hs=None):
+    def __init__(self, hs=None, msg_len=0):
         self._h = hs or (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
         self._unprocessed = bytearray()
-        self._msg_len = 0
+        self._msg_len = msg_len
 
     def update(self, data):
         self._msg_len += len(data)
@@ -83,18 +83,29 @@ class Sha1():
             self._h = process_chunk(self._unprocessed[:64], *self._h)
             self._unprocessed = self._unprocessed[64:]
 
-    def bootstrap(self, digest, msg_len):
-        """Bootstrap the state from an existing digest, for length-extension attacks."""
-        return self  # TODO
-
 
 def sha1(message):
     return Sha1().update(message).digest()
-
-
 assert(sha1(b"The quick brown fox jumps over the lazy dog") ==
         bytes.fromhex("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"))
 assert(sha1(b"The quick brown fox jumps over the lazy cog") ==
         bytes.fromhex("de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3"))
 assert(sha1(b"") ==
         bytes.fromhex("da39a3ee5e6b4b0d3255bfef95601890afd80709"))
+
+
+def length_extension_attack(digest, prev_msg_len, extra):
+    """Bootstrap the state from an existing digest, for length-extension attacks."""
+    hs = tuple(int.from_bytes(digest[i:i + 4], "big") for i in range(0, len(digest), 4))
+    glue = get_glue(prev_msg_len)
+    sha = Sha1(hs, prev_msg_len + len(glue))
+    return sha.update(extra).digest(), glue + extra
+
+
+def __test_length_extension():
+    new_digest, to_append = length_extension_attack(sha1(b"hello"), len(b"hello"), b"world")
+    assert to_append == get_glue(msg_len=len(b"hello")) + b"world"
+    # Test that we're able to bootstrap from an existing digest properly.
+    assert new_digest == sha1(b"hello" + get_glue(msg_len=len(b"hello")) + b"world")
+
+__test_length_extension()
