@@ -478,9 +478,9 @@ convenience.*
     msg_len = prefix_len + len(prefix_glue)
     sha = Sha1(h=h, msg_len=msg_len)
     new_mac = sha.update(b';admin=true')
-    new_message = msg + ';admin=true'
+    new_message = msg + prefix_glue + b';admin=true'
     if try_message(new_message, new_mac):
-      print("Bingo! ", new_digest)
+      print("Bingo! ", new_message, " ", new_digest)
   ```
 
 - [ ] [30. Break an MD4 keyed MAC using length extension](src/30.py)
