@@ -504,6 +504,15 @@ convenience.*
   sleep adds more noise (that's part of the challenge), but we also want Travis
   to successfully run on it, in reasonable time. :)
 
-- [ ] [32. Break HMAC-SHA1 with a slightly less artificial timing leak](src/32.py)
+- [x] [32. Break HMAC-SHA1 with a slightly less artificial timing leak](src/32.py)
+
+  Took the same implementation and reduced sleep to `0.1ms`. Note that I'm
+  still doing this all without going through HTTP, which is EZ mode...
+  Attacking this in practice seems difficult. Good experience. :)
+
+
+## Set 5: Diffie-Hellman and friends
+
+- [ ] [33. Implement Diffie-Hellman](src/33.py)
 
 *TODO: challenge*
