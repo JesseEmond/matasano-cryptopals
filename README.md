@@ -513,6 +513,12 @@ convenience.*
 
 ## Set 5: Diffie-Hellman and friends
 
-- [ ] [33. Implement Diffie-Hellman](src/33.py)
+- [x] [33. Implement Diffie-Hellman](src/33.py)
+
+  Pretty easy in python, especially with `pow(a, b, p)`. Noteworthy: to
+  implement `modexp`, you can do so with exponentiation-by-squaring, with
+  modulos on the way.
+
+- [ ] [34. Implement a MITM key-fixing attack on Diffie-Hellman with parameter injection](src/34.py)
 
 *TODO: challenge*
