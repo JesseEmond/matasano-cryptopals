@@ -1,3 +1,5 @@
+# Implementation based on https://tools.ietf.org/html/rfc1320
+# and ideas from https://rosettacode.org/wiki/MD4
 import bitops
 import merkle_damgard
 
