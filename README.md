@@ -483,6 +483,14 @@ convenience.*
       print("Bingo! ", new_message, " ", new_digest)
   ```
 
-- [ ] [30. Break an MD4 keyed MAC using length extension](src/30.py)
+- [x] [30. Break an MD4 keyed MAC using length extension](src/30.py)
 
+  After refactoring the `sha1` implementation to a general `merkle_damgard`
+  [structure](https://en.wikipedia.org/wiki/Merkle%E2%80%93Damg%C3%A5rd_construction),
+  I then reimplemented `md4` using similar primitives (only implementing
+  `process_chunk`). The logic for length-extension attacks could then be made
+  generally available in `merkle_damgard`, which I simply used for MD4 and it
+  worked out of the box.
+
+- [ ] [31. Implement and break HMAC-SHA1 with an artificial timing leak](src/31.py)
 *TODO: challenge*

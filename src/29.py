@@ -36,7 +36,7 @@ extra = b";admin=true"
 
 for secret_len in range(32):
 	msg_len = secret_len + len(cookie)
-	cookie_mac, to_append = sha1.length_extension_attack(orig_cookie_mac, msg_len, extra)
+	cookie_mac, to_append = sha1.Sha1.length_extension_attack(orig_cookie_mac, msg_len, extra)
 	if challenge.validate(cookie + to_append, cookie_mac): break
 
 cookie += to_append

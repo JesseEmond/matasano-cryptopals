@@ -1,3 +1,4 @@
+from md4 import md4
 from sha1 import sha1
 
 
@@ -7,3 +8,7 @@ def keyed_mac(key, message, hash_):
 
 def sha1_keyed_mac(key, message):
     return keyed_mac(key, message, sha1)
+
+
+def md4_keyed_mac(key, message):
+    return keyed_mac(key, message, md4)
