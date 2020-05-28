@@ -1,6 +1,6 @@
-import md4
-import sha1
-import xor
+from . import md4
+from . import sha1
+from . import xor
 
 
 def keyed_mac(key, message, hash_fn):

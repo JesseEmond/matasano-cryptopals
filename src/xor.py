@@ -1,5 +1,5 @@
-from frequency import english_test
-from distance import hamming
+from .frequency import english_test
+from .distance import hamming
 
 
 def xor_bytes(a, b):

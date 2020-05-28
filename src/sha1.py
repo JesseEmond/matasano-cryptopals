@@ -1,6 +1,6 @@
 # Following the pseudocode on https://en.wikipedia.org/wiki/SHA-1
-import bitops
-import merkle_damgard
+from . import bitops
+from . import merkle_damgard
 
 
 class Sha1(merkle_damgard.Hash):

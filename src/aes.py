@@ -1,5 +1,5 @@
 from Crypto.Cipher import AES
-from xor import xor_bytes
+from .xor import xor_bytes
 
 
 class BadPaddingException(Exception):
