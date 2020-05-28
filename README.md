@@ -492,5 +492,18 @@ convenience.*
   generally available in `merkle_damgard`, which I simply used for MD4 and it
   worked out of the box.
 
-- [ ] [31. Implement and break HMAC-SHA1 with an artificial timing leak](src/31.py)
+- [x] [31. Implement and break HMAC-SHA1 with an artificial timing leak](src/31.py)
+
+  If we're bruteforcing the `ith` byte of the HMAC, we measure, for each byte,
+  how long it takes to evaluate a file with `hmac[i] = byte`. We do so `round`
+  times to get some distribution. Simply taking the median of each byte times
+  and taking the byte with the maximum median seemed sufficient here.
+
+  Note that this takes a _while_ to run, so I added (optional) logic to only
+  add a `sleep` for the current byte. This is cheating because in reality each
+  sleep adds more noise (that's part of the challenge), but we also want Travis
+  to successfully run on it, in reasonable time. :)
+
+- [ ] [32. Break HMAC-SHA1 with a slightly less artificial timing leak](src/32.py)
+
 *TODO: challenge*
