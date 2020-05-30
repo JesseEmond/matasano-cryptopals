@@ -50,7 +50,7 @@ def on_byte_found(hmac, byte_idx):
 
 
 hmac = timing_attack.comparison_time_attack(
-    bytes([0] * 20), try_hmac, per_byte_rounds=10, progress_callback=on_byte_found)
+    bytes([0] * 20), try_hmac, per_byte_rounds=20, progress_callback=on_byte_found)
     
 
 assert challenge.upload(file, hmac) == 200
