@@ -5,16 +5,16 @@
 *Note: most links below are just links to files within this repo for your
 convenience.*
 ## Set 1: Basics
-- [x] [1. Convert hex to base64](src/01.py)
+- [x] [1. Convert hex to base64](src/set_1/01.py)
 
   Trivial introduction to hex parsing to get you going. I
   [implemented b64decode](src/mybase64.py) out of curiosity.
 
-- [x] [2. Fixed XOR](src/02.py)
+- [x] [2. Fixed XOR](src/set_1/02.py)
 
   Introduction to XOR between strings. Implementation in [xor.py](src/xor.py).
 
-- [x] [3. Single-byte XOR cipher](src/03.py)
+- [x] [3. Single-byte XOR cipher](src/set_1/03.py)
 
   Ahh. Crypto! To break it, loop through all 256 possible bytes to find which
   of the keys produces the decrypted text that looks the most like English.
@@ -25,16 +25,16 @@ convenience.*
   [xor.py](src/xor.py) has code to encrypt/decrypt using a single-byte XOR
   cipher.
 
-- [x] [4. Detect single-character XOR](src/04.py)
+- [x] [4. Detect single-character XOR](src/set_1/04.py)
 
   Very similar to challenge #3. Break all ciphertexts, pick the one with the
   best "English score".
 
-- [x] [5. Implement repeating-key XOR](src/05.py)
+- [x] [5. Implement repeating-key XOR](src/set_1/05.py)
 
   Simply cycle the key when XOR-ing with the plaintext.
 
-- [x] [6. Break repeating-key XOR](src/06.py)
+- [x] [6. Break repeating-key XOR](src/set_1/06.py)
 
   Interesting! Breaking it amounts to breaking a single-byte XOR cipher for the
   1st character of every repeated key, then for the 2nd, the 3rd, etc.
@@ -47,12 +47,12 @@ convenience.*
   keysize that produces the most similar blocks. We need to normalize because
   e.g. a keysize of 4 would have 2 times as many bits as a keysize of 2.
 
-- [x] [7. AES in ECB mode](src/07.py)
+- [x] [7. AES in ECB mode](src/set_1/07.py)
 
   Intro to using the pycrypto API. [aes.py](src/aes.py) has the code that
   handles AES encryption/decryption.
 
-- [x] [8. Detect AES in ECB mode](src/08.py)
+- [x] [8. Detect AES in ECB mode](src/set_1/08.py)
 
   ECB mode encrypts the blocks independently. This means that two identical
   blocks of plaintext at different positions will produce the same ciphertext
@@ -62,7 +62,7 @@ convenience.*
 
 ## Set 2: Block crypto
 
-- [x] [9. Implement PKCS#7 padding](src/09.py)
+- [x] [9. Implement PKCS#7 padding](src/set_2/09.py)
 
   We pad the plaintext so that it has a length that is a multiple of the
   blocksize (e.g. 16). If it already is, we add a full block of padding. The
@@ -75,7 +75,7 @@ convenience.*
   pad('') = '\x10' * 16
   ```
 
-- [x] [10. Implement CBC mode](src/10.py)
+- [x] [10. Implement CBC mode](src/set_2/10.py)
 
   [Wikipedia](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_.28CBC.29)'s
   image on the matter is enough of a description to implement this. Basically,
@@ -83,7 +83,7 @@ convenience.*
   the first block). The result is that 2 identical plaintext blocks will no
   longer automatically encrypt to the same ciphertext block (compared to ECB).
 
-- [x] [11. An ECB/CBC detection oracle](src/11.py)
+- [x] [11. An ECB/CBC detection oracle](src/set_2/11.py)
 
   When using ECB, two identical plaintext blocks will encrypt to the same
   ciphertext block.
@@ -95,7 +95,7 @@ convenience.*
   consider the ciphertext to be encrypted using ECB. Otherwise, we consider that
   it used CBC.
 
-- [x] [12. Byte-at-a-time ECB decryption (Simple)](src/12.py)
+- [x] [12. Byte-at-a-time ECB decryption (Simple)](src/set_2/12.py)
 
   Detecting the blocksize is relatively easy. We start by noting
   `len(ciphertext)`. We continue adding prefix bytes until we notice a change in
@@ -192,7 +192,7 @@ convenience.*
   that we have successfully bruteforced the whole plaintext. We can remove our
   undesirable bruteforced `0x01` padding and enjoy reading our plaintext. :tada:
 
-- [x] [13. ECB cut-and-paste](src/13.py)
+- [x] [13. ECB cut-and-paste](src/set_2/13.py)
 
   Using the same exploitable ECB property as before, we craft multiple messages
   and pick-and-choose the parts that we want.
@@ -221,7 +221,7 @@ convenience.*
 
   Which grants us admin access to log in.
 
-- [x] [14. Byte-at-a-time ECB decryption (Harder)](src/14.py)
+- [x] [14. Byte-at-a-time ECB decryption (Harder)](src/set_2/14.py)
 
   This attack is the same as the challenge #12, but with some required initial
   work, offsets and padding to apply.
@@ -247,13 +247,13 @@ convenience.*
   multiple. We also need to offset any index in the produced ciphertext by the
   amount of blocks in the prefix.
 
-- [x] [15. PKCS#7 padding validation](src/15.py)
+- [x] [15. PKCS#7 padding validation](src/set_2/15.py)
 
   We get the last byte of the plaintext as `n` and make sure that the last `n`
   bytes of the plaintext are equal to `n`. If it is not the case, raise an
   exception.
 
-- [x] [16. CBC bitflipping attacks](src/16.py)
+- [x] [16. CBC bitflipping attacks](src/set_2/16.py)
 
   Start out by encrypting a normal token for a block of 16 bytes. This will be
   where we will inject our crafted block. Call this encrypted block
@@ -278,7 +278,7 @@ convenience.*
 
 ## Set 3: Block & stream crypto
 
-- [x] [17. The CBC padding oracle](src/17.py)
+- [x] [17. The CBC padding oracle](src/set_3/17.py)
 
   If we have an oracle that tells us if the padding on a ciphertext is valid or
   not, we are able to recover the plaintext.
@@ -323,7 +323,7 @@ convenience.*
   - the `pre_xor` that produces `...55541` passes
   - the `pre_xor` that produces `...55545` **does not**
 
-- [x] [18. Implement CTR, the stream cipher mode](src/18.py)
+- [x] [18. Implement CTR, the stream cipher mode](src/set_3/18.py)
 
   There isn't much to say here... We generate a keystream with:
   
@@ -332,7 +332,7 @@ convenience.*
   Where `nonce` and `counter` are 64-bits integers encoded in little-endian and
   `counter` is the amount of blocks generated so far.
 
-- [x] [19. Break fixed-nonce CTR mode using substitutions](src/19.py)
+- [x] [19. Break fixed-nonce CTR mode using substitutions](src/set_3/19.py)
 
   We reuse our `english_test` function and pick the key that has the best
   score. In some cases, we pick a key that is not as good as some others
@@ -341,13 +341,13 @@ convenience.*
 
   As mentioned by the challenge description, this is a bit manual indeed.
 
-- [x] [20. Break fixed-nonce CTR statistically](src/20.py)
+- [x] [20. Break fixed-nonce CTR statistically](src/set_3/20.py)
 
   Very similar to the previous challenge, except that we can heavily reuse code
   that we've written before.
 
 
-- [x] [21. Implement the MT19937 Mersenne Twister RNG](src/21.py)
+- [x] [21. Implement the MT19937 Mersenne Twister RNG](src/set_3/21.py)
 
   This task surprisingly took a little longer than just copying Wikipedia's
   pseudocode. I spent some time wondering why Python's random would yield
@@ -367,12 +367,12 @@ convenience.*
   the same state as us when seeding. Therefore, the tests for this one use
   values that I extracted with C++'s implementation.
 
-- [x] [22. Crack an MT19937 seed](src/22.py)
+- [x] [22. Crack an MT19937 seed](src/set_3/22.py)
 
   Pretty straightforward. Bruteforce all sensible seeds (a couple of seconds
   in the past) and pick the one that matches.
 
-- [x] [23. Clone an MT19937 RNG from its output](src/23.py)
+- [x] [23. Clone an MT19937 RNG from its output](src/set_3/23.py)
 
   The state is directly coming from the next output, so it is really easy to
   recover the next state from a given output.
@@ -410,7 +410,7 @@ convenience.*
   We can then recover the whole `y` this way. The left shift is very similar,
   but we `&` with a constant before xoring.
 
-- [x] [24. Create the MT19937 stream cipher and break it](src/24.py)
+- [x] [24. Create the MT19937 stream cipher and break it](src/set_3/24.py)
 
   This challenge was very similar to challenge 22. Basically, we bruteforce the
   seed space to find one that gives an expected decryption/token.
@@ -418,19 +418,19 @@ convenience.*
 
 ## Set 4: Stream crypto and randomness
 
-- [x] [25. Break "random access read/write" AES CTR](src/25.py)
+- [x] [25. Break "random access read/write" AES CTR](src/set_4/25.py)
 
   Here we're doing a terrible mistake: we are reusing our keystream on a
   different plaintext. Solution? We provide `00000000...` and it gets directly
   xored with the keystream (yielding the keystream). We xor that with the
   original ciphertext and we get the secret back!
 
-- [x] [26. CTR bitflipping](src/26.py)
+- [x] [26. CTR bitflipping](src/set_4/26.py)
 
   This one is really straightforward. We know the plaintext, so we can find the
   keystream and use it to encrypt our token the way that we want.
 
-- [x] [27. Recover the key from CBC with IV=Key](src/27.py)
+- [x] [27. Recover the key from CBC with IV=Key](src/set_4/27.py)
 
   When we split the obtained ciphertext in 3 blocks:
   ```
@@ -448,12 +448,12 @@ convenience.*
   xoring with `0`). We can recover the key through: 
   `P1 ^ P3 = (P3 ^ KEY) ^ P3 = KEY`.
 
-- [x] [28. Implement a SHA-1 keyed MAC](src/28.py)
+- [x] [28. Implement a SHA-1 keyed MAC](src/set_4/28.py)
 
   Wrote implementation based on Wikipedia's pseudocode (inspired by existing
   implementations).
 
-- [x] [29. Break a SHA-1 keyed MAC using length extension](src/29.py)
+- [x] [29. Break a SHA-1 keyed MAC using length extension](src/set_4/29.py)
 
   The final SHA-1 hash is just the `h` values directly encoded to bytes (after
   doing the pre-processing of appending the `glue` for a given length and
@@ -483,7 +483,7 @@ convenience.*
       print("Bingo! ", new_message, " ", new_digest)
   ```
 
-- [x] [30. Break an MD4 keyed MAC using length extension](src/30.py)
+- [x] [30. Break an MD4 keyed MAC using length extension](src/set_4/30.py)
 
   After refactoring the `sha1` implementation to a general `merkle_damgard`
   [structure](https://en.wikipedia.org/wiki/Merkle%E2%80%93Damg%C3%A5rd_construction),
@@ -492,7 +492,7 @@ convenience.*
   generally available in `merkle_damgard`, which I simply used for MD4 and it
   worked out of the box.
 
-- [x] [31. Implement and break HMAC-SHA1 with an artificial timing leak](src/31.py)
+- [x] [31. Implement and break HMAC-SHA1 with an artificial timing leak](src/set_4/31.py)
 
   If we're bruteforcing the `ith` byte of the HMAC, we measure, for each byte,
   how long it takes to evaluate a file with `hmac[i] = byte`. We do so `round`
@@ -504,7 +504,7 @@ convenience.*
   sleep adds more noise (that's part of the challenge), but we also want Travis
   to successfully run on it, in reasonable time. :)
 
-- [x] [32. Break HMAC-SHA1 with a slightly less artificial timing leak](src/32.py)
+- [x] [32. Break HMAC-SHA1 with a slightly less artificial timing leak](src/set_4/32.py)
 
   Took the same implementation and reduced sleep to `0.1ms`. Note that I'm
   still doing this all without going through HTTP, which is EZ mode...
@@ -513,13 +513,13 @@ convenience.*
 
 ## Set 5: Diffie-Hellman and friends
 
-- [x] [33. Implement Diffie-Hellman](src/33.py)
+- [x] [33. Implement Diffie-Hellman](src/set_5/33.py)
 
   Pretty easy in python, especially with `pow(a, b, p)`. Noteworthy: to
   implement `modexp`, you can do so with exponentiation-by-squaring, with
   modulos on the way.
 
-- [x] [34. Implement a MITM key-fixing attack on Diffie-Hellman with parameter injection](src/34.py)
+- [x] [34. Implement a MITM key-fixing attack on Diffie-Hellman with parameter injection](src/set_5/34.py)
 
   By giving `p` instead of `A` to the server, it ends up computing
   `s = A^b mod p`, which gives:
@@ -531,7 +531,7 @@ convenience.*
   So we then know the secret key. The same goes for when we return `p` instead
   of `p`.
 
-- [x] [35. Implement DH with negotiated groups, and break with malicious "g" parameters](src/35.py)
+- [x] [35. Implement DH with negotiated groups, and break with malicious "g" parameters](src/set_5/35.py)
 
   Three scenarios.
 
@@ -565,6 +565,6 @@ convenience.*
   
   Then, `a*b` will be odd iff `a` *and* `b` are odd.
 
-- [ ] [36. Implement Secure Remote Password (SRP)](src/36.py)
+- [ ] [36. Implement Secure Remote Password (SRP)](src/set_5/36.py)
 
 *TODO: challenge*
