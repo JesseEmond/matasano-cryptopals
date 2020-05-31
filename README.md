@@ -531,6 +531,39 @@ convenience.*
   So we then know the secret key. The same goes for when we return `p` instead
   of `p`.
 
-- [ ] [35. Implement DH with negotiated groups, and break with malicious "g" parameters](src/35.py)
+- [x] [35. Implement DH with negotiated groups, and break with malicious "g" parameters](src/35.py)
+
+  Three scenarios.
+
+  For `g=1`, we have:
+  ```
+  s = g^a^b mod p
+    = 1^a^b mod p
+    = 1 mod p
+  ```
+
+  For `g=p`, we have:
+  ```
+  s = g^a^b mod p
+    = p^a^b mod p
+    = 0 mod p
+  ```
+  This is the same as challenge 35. Note that it would be the same for `g=0`.
+
+  For `g=p-1` (note `p-1 mod p = -1 mod p`), we have:
+  ```
+  s = g^a^b mod p
+    = (p-1)^a^b mod p
+    = (-1)^a^b mod p
+    = { -1 mod p   if a*b is odd
+      { 1 mod p    if a*b is even
+  ```
+  We could already do a lot by just restricting to two possibilities, but we
+  can narrow it down by finding if `a` and `b` are individually odd/even:
+   - If `A == 1 mod p`, `a` is even. If it is `p-1 mod p`, `a` is odd.
+   - If `B == 1 mod p`, `b` is even. If it is `p-1 mod p`, `b` is odd.
+  Then, `a*b` will be odd iff `a` *and* `b` are odd.
+
+- [ ] [36. Implement Secure Remote Password (SRP)](src/36.py)
 
 *TODO: challenge*
