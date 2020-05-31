@@ -562,6 +562,7 @@ convenience.*
   can narrow it down by finding if `a` and `b` are individually odd/even:
    - If `A == 1 mod p`, `a` is even. If it is `p-1 mod p`, `a` is odd.
    - If `B == 1 mod p`, `b` is even. If it is `p-1 mod p`, `b` is odd.
+  
   Then, `a*b` will be odd iff `a` *and* `b` are odd.
 
 - [ ] [36. Implement Secure Remote Password (SRP)](src/36.py)
