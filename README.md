@@ -519,6 +519,18 @@ convenience.*
   implement `modexp`, you can do so with exponentiation-by-squaring, with
   modulos on the way.
 
-- [ ] [34. Implement a MITM key-fixing attack on Diffie-Hellman with parameter injection](src/34.py)
+- [x] [34. Implement a MITM key-fixing attack on Diffie-Hellman with parameter injection](src/34.py)
+
+  By giving `p` instead of `A` to the server, it ends up computing
+  `s = A^b mod p`, which gives:
+  ```
+  s = A^b mod p
+    = p^b mod p
+    = 0 mod p
+  ```
+  So we then know the secret key. The same goes for when we return `p` instead
+  of `p`.
+
+- [ ] [35. Implement DH with negotiated groups, and break with malicious "g" parameters](src/35.py)
 
 *TODO: challenge*
