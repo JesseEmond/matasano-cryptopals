@@ -1,5 +1,6 @@
 # Very similar to 31, so copied most of the challenge code from it.
 # Able to go to 0.1ms wait! Attacking this in practice seems... hard.
+# While locally at 0.1ms it works, increasing to 1ms for CI.
 from os import urandom
 
 from .. import mac
@@ -15,7 +16,7 @@ class Challenge():
         """Imagine this is an HTTP GET..."""
         hmac = mac.hmac_sha1(self._secret, file)
         if not timing_attack.insecure_compare(
-            hmac, signature, delay_ms=0.1, known_bytes=known_bytes):
+            hmac, signature, delay_ms=1, known_bytes=known_bytes):
             return 500
         print("Successful upload of %s.", file)
         return 200
