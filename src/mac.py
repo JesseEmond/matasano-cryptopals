@@ -1,3 +1,6 @@
+import hmac as py_hmac
+import hashlib
+
 from . import md4
 from . import sha1
 from . import xor
@@ -31,3 +34,7 @@ def hmac_sha1(key, message):
     return hmac(key, message, sha1.Sha1)
 assert(hmac_sha1(b"key", b"The quick brown fox jumps over the lazy dog") ==
     bytes.fromhex("de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9"))
+
+
+def hmac_sha256(key, message):
+    return py_hmac.new(key, message, hashlib.sha256).digest()

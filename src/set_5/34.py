@@ -2,6 +2,7 @@ import os
 import random
 
 from .. import aes
+from .. import byteops
 from .. import sha1
 
 
@@ -10,12 +11,8 @@ from .. import sha1
 SECRET_MESSAGE = b"YELLOW SUBMARINE"
 
 
-def int_to_bytes(n):
-    return n.to_bytes((n.bit_length() + 7) // 8, "big")
-
-
 def secret_to_key(s):
-    return sha1.sha1(int_to_bytes(s))[:16]
+    return sha1.sha1(byteops.int_to_bytes(s))[:16]
 
 
 class Client:
