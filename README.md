@@ -619,6 +619,7 @@ convenience.*
   ```
   x = H(salt + password)
   v = pow(g, x, n)
+  # Assuming we sent `B = g^b mod n` instead of `B = v * g^b mod n` during mitm.
   # Client would do: `s = pow(B * invmod(v), a + u * x, n)`.
   # s =     (B / v)^(a+ux) mod n
   #   = (g^b / g^x)^(a+ux) mod n
@@ -628,12 +629,20 @@ convenience.*
   s = pow(A * pow(v, u, n), (b - x) % n, n)
   ```
 
+  Note that we pretend that we are doing `v * g^b mod n` instead of
+  `kv * g^b mod n`, because otherwise we end up with a tricky term that we don't
+  know how to work with (we don't know `a+ux`):
+  `(Av^u)^(b-x) * k^(-a - ux) mod n`
+
+  To show that this attack would work if we did `v * g^b mod n`, I also
+  implemented that behind a boolean option to confirm that the math made sense.
+
   If we were to use xor instead, we could do a "partition attack" by eliminating
   possible passwords (if `B = v xor g^b`, then a guess v' is invalid if
   `B > n`). If `g` is not a primitive root of `GF(n)`, we can also do a
   partition attack.
 
-  So modular addition appears to be a reasonable choice here.
+  So modular addition (in the real SRP) appears to be a reasonable choice here.
 
 - [ ] [39. Implement RSA](src/set_5/39.py)
 
