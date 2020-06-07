@@ -565,11 +565,11 @@ convenience.*
   
   Then, `a*b` will be odd iff `a` *and* `b` are odd.
 
-- [ ] [36. Implement Secure Remote Password (SRP)](src/set_5/36.py)
+- [x] [36. Implement Secure Remote Password (SRP)](src/set_5/36.py)
 
   Implement the protocol under [srp.py](src/srp.py).
 
-- [ ] [37. Break SRP with a zero key](src/set_5/37.py)
+- [x] [37. Break SRP with a zero key](src/set_5/37.py)
 
   By passing `A = 0`, the server will then do:
 
