@@ -571,4 +571,17 @@ convenience.*
 
 - [ ] [37. Break SRP with a zero key](src/set_5/37.py)
 
+  By passing `A = 0`, the server will then do:
+
+  ```
+  s = (A * v^u)^b mod N
+    = (0 * v^u)^b mod N
+    =         0^b mod N
+    =           0 mod N
+  ```
+
+  We get the same result by passing `A = cN`, where `c` is an integer.
+
+- [ ] [38. Offline dictionary attack on simplified SRP](src/set_5/38.py)
+
 *TODO: challenge*
