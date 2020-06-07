@@ -22,7 +22,7 @@ class Client(dh.DhClient):
     def verify(self, server):
         print("C: Sending %s to server." % SECRET_MESSAGE)
         key = secret_to_key(self._s)
-        iv = random_helper.rand_bytes(16)
+        iv = random_helper.random_bytes(16)
         enc = aes.cbc_encrypt(key, iv, SECRET_MESSAGE)
         enc, iv = server.echo(enc, iv)
         assert aes.cbc_decrypt(key, iv, enc) == SECRET_MESSAGE
@@ -35,7 +35,7 @@ class Server(dh.DhServer):
         msg = aes.cbc_decrypt(key, iv, msg)
         print("S: Received %s." % msg)
         assert msg == SECRET_MESSAGE
-        iv = random_helper.rand_bytes(16)
+        iv = random_helper.random_bytes(16)
         return aes.cbc_encrypt(key, iv, msg), iv
 
 

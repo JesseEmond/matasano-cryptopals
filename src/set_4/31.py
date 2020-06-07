@@ -1,13 +1,12 @@
-from os import urandom
-
 from .. import mac
+from .. import random_helper
 from .. import timing_attack
 
 
 class Challenge():
 
     def __init__(self):
-        self._secret = urandom(16)
+        self._secret = random_helper.random_bytes(16)
 
     def upload(self, file, signature, known_bytes=None):
         """Imagine this is an HTTP GET..."""

@@ -1,9 +1,8 @@
-from os import urandom
-
+from .. import random_helper
 from ..aes import ecb_encrypt, ecb_decrypt
 
 
-key = urandom(16)
+key = random_helper.random_bytes(16)
 
 
 def sanitize(s):

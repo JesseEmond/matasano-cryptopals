@@ -1,11 +1,10 @@
-from os import urandom
-
+from .. import random_helper
 from ..aes import ctr_encrypt, ctr_decrypt
 from ..xor import xor_bytes
 
 
-KEY = urandom(16)
-NONCE = int.from_bytes(urandom(8), byteorder='big')
+KEY = random_helper.random_bytes(16)
+NONCE = int.from_bytes(random_helper.random_bytes(8), byteorder='big')
 
 
 def escape(s):

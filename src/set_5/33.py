@@ -1,6 +1,5 @@
-import random
-
 from .. import dh
+from .. import random_helper
 
 
 def modexp(base, exp, modulus):
@@ -19,9 +18,9 @@ assert pow(5, 15, 37) == modexp(5, 15, 37)
 
 
 def dh_exchange(p, g):
-    a = random.randrange(p)
+    a = random_helper.random_number(below=p)
     A = modexp(g, a, p)
-    b = random.randrange(p)
+    b = random_helper.random_number(below=p)
     B = modexp(g, b, p)
 
     s = modexp(B, a, p)

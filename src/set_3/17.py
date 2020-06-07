@@ -1,6 +1,6 @@
-from os import urandom
 from base64 import b64encode, b64decode
 
+from .. import random_helper
 from ..aes import (cbc_encrypt, cbc_decrypt, BadPaddingException, get_blocks,
                    xor_bytes, unpad)
 
@@ -18,10 +18,10 @@ SECRETS = [
 "MDAwMDA4b2xsaW4nIGluIG15IGZpdmUgcG9pbnQgb2g=",
 "MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93"]
 
-KEY = urandom(16)
+KEY = random_helper.random_bytes(16)
 
 def get_secret(secret):
-    iv = urandom(16)
+    iv = random_helper.random_bytes(16)
     secret = b64decode(secret)
     return iv, cbc_encrypt(KEY, iv, secret)
 

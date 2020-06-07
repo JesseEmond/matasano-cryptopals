@@ -1,10 +1,10 @@
-from ..prng import random, clone_mt19937
+from .. import prng
 
 
-rand = random(42)
+rand = prng.random(42)
 outputs = [rand.random() for _ in range(1000)]
 
-cloned = clone_mt19937(outputs)
+cloned = prng.clone_mt19937(outputs)
 
 for _ in range(1000):
     assert(cloned.random() == rand.random())

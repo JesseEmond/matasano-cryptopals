@@ -1,11 +1,11 @@
 from base64 import b64decode
-from os import urandom
 
+from .. import random_helper
 from ..aes import ctr_encrypt
 from ..xor import xor_bytes, rank_xor_repeating_keys
 
 
-key = urandom(16)
+key = random_helper.random_bytes(16)
 nonce = 0
 
 with open("src/set_3/20.txt") as f:

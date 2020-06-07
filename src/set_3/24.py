@@ -1,6 +1,6 @@
-from os import urandom
 from time import time
 
+from .. import random_helper
 from ..xor import xor_bytes
 from ..prng import random
 
@@ -35,9 +35,10 @@ assert(decrypt_mt19937(42, encrypt_mt19937(42, b"Hello World!")) ==
 
 known_plaintext = b"A" * 14
 # normally we want 16-bits, but it takes too long... the idea is the same here.
-secret_seed = int.from_bytes(urandom(1), byteorder='big')
+secret_seed = int.from_bytes(random_helper.random_bytes(1), byteorder='big')
 print("Secret seed is: %d" % secret_seed)
-hidden_prefix = urandom(urandom(1)[0])
+hidden_prefix = random_helper.random_bytes(
+        random_helper.random_number(below=256))
 hidden_plaintext = hidden_prefix + known_plaintext
 ciphertext = encrypt_mt19937(secret_seed, hidden_plaintext)
 

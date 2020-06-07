@@ -1,6 +1,6 @@
 from base64 import b64decode
-from os import urandom
 
+from .. import random_helper
 from ..aes import ctr_encrypt, ctr_decrypt
 from ..xor import xor_bytes
 
@@ -17,8 +17,8 @@ with open("src/set_4/25.txt") as f:
     # but let's assume that this is our plaintext...
     secret = b64decode(f.read())
 
-key = urandom(16)
-nonce = int.from_bytes(urandom(8), byteorder='big')
+key = random_helper.random_bytes(16)
+nonce = int.from_bytes(random_helper.random_bytes(8), byteorder='big')
 ciphertext = ctr_encrypt(key, nonce, secret)
 
 # could do block per block, but let's do it all at once...

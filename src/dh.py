@@ -1,4 +1,4 @@
-import random
+from . import random_helper
 
 
 # See https://crypto.stackexchange.com/a/35189
@@ -18,7 +18,7 @@ class DhClient:
         self.p = p
 
     def initiate_dh(self, server):
-        a = random.randrange(self.p)
+        a = random_helper.random_number(below=self.p)
         self.A = pow(self.g, a, self.p)
         self.B = server.respond_dh(self.p, self.g, self.A)
         self._s = pow(self.B, a, self.p)
@@ -27,7 +27,7 @@ class DhClient:
 class DhServer:
 
     def respond_dh(self, p, g, A):
-        b = random.randrange(p)
+        b = random_helper.random_number(below=p)
         self.B = pow(g, b, p)
         self._s = pow(A, b, p)
         return self.B

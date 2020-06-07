@@ -1,5 +1,4 @@
 import hashlib
-import random
 
 from . import byteops
 from . import mac
@@ -35,14 +34,14 @@ class SrpServer:
 
     def store(self, username, password):
         assert username not in self._users
-        salt = byteops.int_to_bytes(random_helper.rand_int(bits=64))
+        salt = byteops.int_to_bytes(random_helper.random_number(bits=64))
         x = password_hash(salt, password)
         v = pow(self.g, x, self.N)
         self._users[username] = (salt, v)
 
     def connect(self, username, A):
         salt, v = self._users[username]
-        b = random.randrange(self.N)
+        b = random_helper.random_number(below=self.N)
         B = (self.k * v + pow(self.g, b, self.N)) % self.N
         u = scrambling_key(A, B)
         s = pow(A * pow(v, u, self.N), b, self.N)
@@ -60,7 +59,7 @@ class SrpServer:
 class SrpClient:
 
     def connect(self, server, username, password):
-        a = random.randrange(server.N)
+        a = random_helper.random_number(below=server.N)
         A = pow(server.g, a, server.N)
         salt, B = server.connect(username, A)
         u = scrambling_key(A, B)

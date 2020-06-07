@@ -1,16 +1,15 @@
-from os import urandom
-from random import SystemRandom
+import random
 
+from .. import random_helper
 from ..aes import ecb_encrypt, cbc_encrypt, get_blocks
 
-random = SystemRandom()
 
 def encryption_oracle(input_):
-    key = urandom(16)
-    iv = urandom(16)
-    prefix = random.randint(5, 10)
-    suffix = random.randint(5, 10)
-    plaintext = urandom(prefix) + input_ + urandom(suffix)
+    key = random_helper.random_bytes(16)
+    iv = random_helper.random_bytes(16)
+    prefix = random_helper.random_bytes(random.randint(5, 10))
+    suffix = random_helper.random_bytes(random.randint(5, 10))
+    plaintext = prefix + input_ + suffix
 
     use_cbc = random.choice([True, False])
 

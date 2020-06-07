@@ -1,6 +1,6 @@
-from os import urandom
 from base64 import b64decode
 
+from .. import random_helper
 from ..aes import ctr_encrypt
 from ..xor import xor_bytes, rank_xor_char_keys
 
@@ -48,7 +48,7 @@ QSB0ZXJyaWJsZSBiZWF1dHkgaXMgYm9ybi4=""".split()
 secrets = [b64decode(secret) for secret in secrets]
 expected = secrets
 
-key = urandom(16)
+key = random_helper.random_bytes(16)
 nonce = 0
 
 secrets = [ctr_encrypt(key, nonce, secret) for secret in secrets]

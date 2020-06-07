@@ -1,7 +1,7 @@
 from base64 import b64decode
-from os import urandom
 from sys import stdout
 
+from .. import random_helper
 from ..aes import ecb_encrypt, get_blocks
 
 
@@ -10,9 +10,9 @@ SECRET = b64decode(
     "aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq"
     "dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg"
     "YnkK")
-KEY = urandom(16)
-PREFIX_LEN = urandom(1)[0]
-PREFIX = urandom(PREFIX_LEN)
+KEY = random_helper.random_bytes(16)
+PREFIX_LEN = random_helper.random_number(below=256)
+PREFIX = random_helper.random_bytes(PREFIX_LEN)
 
 
 def find_blocksize(oracle):

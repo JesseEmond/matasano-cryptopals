@@ -1,11 +1,10 @@
-from os import urandom
-
+from .. import random_helper
 from ..aes import cbc_encrypt, cbc_decrypt
 from ..xor import xor_bytes
 
 
-KEY = urandom(16)
-IV = urandom(16)
+KEY = random_helper.random_bytes(16)
+IV = random_helper.random_bytes(16)
 
 
 def escape(s):

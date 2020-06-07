@@ -1,7 +1,7 @@
 from base64 import b64decode
-from os import urandom
 from sys import stdout
 
+from .. import random_helper
 from ..aes import ecb_encrypt, get_blocks
 
 
@@ -10,7 +10,7 @@ secret = b64decode(
     "aGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBq"
     "dXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUg"
     "YnkK")
-key = urandom(16)
+key = random_helper.random_bytes(16)
 
 
 def guess_blocksize(oracle):

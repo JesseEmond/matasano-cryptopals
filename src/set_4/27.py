@@ -1,11 +1,11 @@
-from os import urandom
 from string import printable
 
+from .. import random_helper
 from ..aes import cbc_encrypt, cbc_decrypt, get_blocks
 from ..xor import xor_bytes
 
 
-KEY = urandom(16)
+KEY = random_helper.random_bytes(16)
 IV = KEY
 
 
@@ -71,6 +71,6 @@ for _ in range(10):  # try a couple of times
         exit()
 
     print("No lowercase ASCII! Adding blocks...")
-    suffix.extend(urandom(16) + c_2 + c_3)
+    suffix.extend(random_helper.random_bytes(16) + c_2 + c_3)
 
 assert(False)
