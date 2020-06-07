@@ -582,6 +582,59 @@ convenience.*
 
   We get the same result by passing `A = cN`, where `c` is an integer.
 
-- [ ] [38. Offline dictionary attack on simplified SRP](src/set_5/38.py)
+- [x] [38. Offline dictionary attack on simplified SRP](src/set_5/38.py)
+
+  This challenge gives a bit of clarity into why SRP does `B = kv + g^b mod n`.
+  If it didn't, like in the challenge, then we can do an offline brute-force of
+  `s`, without knowing the password verifier `v`. We do (pseudocode):
+
+  ```
+  # Known from eaves-dropping an example: salt, A, u, hmac
+  # Forced via MITM: b
+  for password in dictionary:
+    x = H(salt + password)
+    v = pow(g, x, n)
+    s = pow(A * pow(v, u, n), b, n)
+    if hmac(s, salt) == hmac: print("FOUND ", password)
+  ```
+  
+  So why does `B = kv + g^b mod n` help then?
+
+  First, we can't do the same attack because the HMAC that we'll receive is no
+  longer computed directly from `g^b mod n` on the client side, it is computed
+  on `g^b - kv mod n` (because it assumes that we added it to our `B`).
+  
+  [This page](http://srp.stanford.edu/ndss.html) has relevant information about
+  this attack and the protocol. First, why is it safe to add `kv` to a public
+  parameter? We pick `g` such that it is a primitive root of `GF(n)`, which
+  means that we can get any integer `a` such that `1 < a < n` via
+  `a = g^k mod n` (they're distributed uniformly). In that way, doing
+  `g^b + kv mod n` does not leak `kv`, because an eaves-dropper doesn't know
+  `g^b`. Alright, but why not something else?
+  
+  So we want to mix knowledge about the password (`v`) into `B` to protect
+  against offline bruteforce, but we have to be careful about it. If we were to
+  do e.g. `v * g^b mod n` (multiply), we could also attack it:
+
+  ```
+  x = H(salt + password)
+  v = pow(g, x, n)
+  # Client would do: `s = pow(B * invmod(v), a + u * x, n)`.
+  # s =     (B / v)^(a+ux) mod n
+  #   = (g^b / g^x)^(a+ux) mod n
+  #   =   (g^(b-x))^(a+ux) mod n
+  #   =   (g^(a+ux))^(b-x) mod n
+  #   =       (Av^u)^(b-x) mod n
+  s = pow(A * pow(v, u, n), (b - x) % n, n)
+  ```
+
+  If we were to use xor instead, we could do a "partition attack" by eliminating
+  possible passwords (if `B = v xor g^b`, then a guess v' is invalid if
+  `B > n`). If `g` is not a primitive root of `GF(n)`, we can also do a
+  partition attack.
+
+  So modular addition appears to be a reasonable choice here.
+
+- [ ] [39. Implement RSA](src/set_5/39.py)
 
 *TODO: challenge*

@@ -53,8 +53,8 @@ class Mitm(Server):
 
     def connect(self, A):
         self.A = A
-        # Replace 'B' with ours, a fixed one.
-        self.b = 123456
+        # Replace 'B' with ours, one where we'll know 'b'.
+        self.b = random_helper.random_number(below=self.n)
         B = pow(self.g, self.b, self.n)
         self.salt, _, self.u = self.real_server.connect(A)
         return self.salt, B, self.u
