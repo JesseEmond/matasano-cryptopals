@@ -567,4 +567,8 @@ convenience.*
 
 - [ ] [36. Implement Secure Remote Password (SRP)](src/set_5/36.py)
 
+  Implement the protocol under [srp.py](src/srp.py).
+
+- [ ] [37. Break SRP with a zero key](src/set_5/37.py)
+
 *TODO: challenge*
