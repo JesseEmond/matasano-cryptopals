@@ -17,6 +17,11 @@ def password_hash(salt, password):
     return int.from_bytes(xH, "big")
 
 
+def hmac_s(salt, session_key):
+    key = hashlib.sha256(session_key).digest()
+    return mac.hmac_sha256(key, salt)
+
+
 class SrpServer:
 
     def __init__(self, g, k, N):
@@ -24,8 +29,8 @@ class SrpServer:
         self._users = {}
         # {I: session_key}
         self._sessions = {}
-        self.g = 2
-        self.k = 3
+        self.g = g
+        self.k = k
         self.N = N
 
     def store(self, username, password):
@@ -47,9 +52,8 @@ class SrpServer:
 
     def validate(self, username, hmac):
         session_key = self._sessions[username]
-        key = hashlib.sha256(session_key).digest()
         salt, _ = self._users[username]
-        assert mac.hmac_sha256(key, salt) == hmac
+        assert hmac_s(salt, session_key) == hmac
         print("[S] Connection successful!")
 
 
@@ -66,6 +70,5 @@ class SrpClient:
         self.validate(server, username, salt)
 
     def validate(self, server, username, salt):
-        key = hashlib.sha256(self._session_key).digest()
-        hmac = mac.hmac_sha256(key, salt)
+        hmac = hmac_s(salt, self._session_key)
         server.validate(username, hmac)
