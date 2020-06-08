@@ -14,6 +14,11 @@ def egcd(a, b):
 assert egcd(46, 240) == (2, 47, -9)
 
 
+def gcd(a, b):
+    r, _, _ = egcd(a, b)
+    return r
+
+
 def modinv(a, n):
     """at = 1 mod n, returns t if gcd(a, n) = 1, otherwise raises ValueError."""
     # ns + at = 1
