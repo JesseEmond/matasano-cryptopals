@@ -656,10 +656,10 @@ convenience.*
   First, probabilistic? It functions by testing for properties that are always
   true for primer numbers, but only sometimes for composite numbers (with a test
   that has a chance to filter out any possible composite number). For
-  Miller-Rabin the probability for tagging a number as "probably prime" is 1/4
-  per round. By doing 50 rounds, the probability of having a composite number
-  pass each round 50 times (we call this a "strong pseudoprime") is 1/4^50, or
-  ~= 10^(-30). To put this in perspective,
+  Miller-Rabin, the probability of tagging a composite number as "probably
+  prime" is 1/4 per round. By doing 50 rounds, the probability of having a
+  composite number pass all 50 rounds (we call this a "strong pseudoprime") is
+  1/4^50, or ~= 10^(-30). To put this in perspective,
   [this link](https://stackoverflow.com/a/4160517) compares that probability to
   the probability of a cosmic ray flipping the 1-bit result of a deterministic
   test. In other words, probabilistic is fine.
