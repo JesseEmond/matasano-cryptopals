@@ -11,15 +11,6 @@ def is_prime(n):
     return miller_rabin(n)
 
 
-def random_prime(bits):
-    """Returns a random prime with the number of bits specified."""
-    while True:
-        n = random_helper.random_number(bits=bits)
-        n |= 1  # Force it to be odd.
-        if is_prime(n):
-            return n
-
-
 def miller_rabin(n, rounds=50):
     """Performs a Miller-Rabin test to see if 'n' is a strong probable prime.
 
@@ -51,9 +42,9 @@ def miller_rabin_round(n):
     We can rewrite a^(n-1) as a^(2^s * d), where d is odd (factor out powers of
     2).
 
-    If 'n' is prime and (mod n) is a field, then:
-        x^2 = 1 (mod p) has only two roots: x = 1 (mod p) and x = -1 (mod p)
-    To prove that there are only two roots, we can use Euclid's lemma on:
+    If 'n' is prime, then (mod n) is a field and:
+        x^2 = 1 (mod n) has only two roots: x = 1 (mod n) and x = -1 (mod n)
+    To prove that there are only two roots, we can use Euclid's lemma:
         x^2 - 1 = (x + 1)(x - 1) = 0  (mod n)
     Then it follows that since 'n' divides (x + 1)(x - 1), it divides one of the
     factors.

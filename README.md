@@ -644,6 +644,63 @@ convenience.*
 
   So modular addition (in the real SRP) appears to be a reasonable choice here.
 
-- [ ] [39. Implement RSA](src/set_5/39.py)
+- [x] [39. Implement RSA](src/set_5/39.py)
+
+  We implement `egcd` and `modinv` in [mod.py](src/mod.py).
+
+  We also implement `is_prime` in [prime.py](src/prime.py) and `random_prime`.
+
+  To implement primality checking for big numbers (think >1024 bits), we
+  use a probabilistic method, Miller-Rabin.
+
+  First, probabilistic? It functions by testing for properties that are always
+  true for primer numbers, but only sometimes for composite numbers (with a test
+  that has a chance to filter out any possible composite number). For
+  Miller-Rabin the probability for tagging a number as "probably prime" is 1/4
+  per round. By doing 50 rounds, the probability of having a composite number
+  pass each round 50 times (we call this a "strong pseudoprime") is 1/4^50, or
+  ~= 10^(-30). To put this in perspective,
+  [this link](https://stackoverflow.com/a/4160517) compares that probability to
+  the probability of a cosmic ray flipping the 1-bit result of a deterministic
+  test. In other words, probabilistic is fine.
+
+  The Miller-Rabin test works by starting from Fermat's little theorem:
+  For `n` prime, `a^(n-1) = 1 (mod n)`. We can rewrite `a^(n-1)` as
+  `a^(2^s * d)`, where `d` is odd (factor out powers of 2).
+
+  If `n` is prime, `(mod n)` is a field and `x^2 = 1 (mod n)` has only two
+  roots: `x = 1 (mod n)` and `x = -1 (mod n)`. To prove that there are only two
+  roots, we can use
+  [Euclid's lemma](https://en.wikipedia.org/wiki/Euclid%27s_lemma):
+  `x^2 - 1 = (x + 1)(x - 1) = 0 (mod n)`. Then it follows that since `n` divides
+  `(x + 1)(x - 1)`, it divides one of the factors.
+
+  So, from `a^(n-1) = 1 (mod n)`, if `n` is prime, we can take square roots as
+  long as the result is 1, and we should get -1 eventually (or reach `a^d = 1`).
+
+  In other words, a *prime number* will have:
+
+  ```
+  a^d = 1 (mod n)
+    or 
+  a^(2^r * d) = -1 (mod n), for some 0 <= r < s
+  ```
+
+  From the contrapositive, we can "witness" that `n` is *composite* if:
+
+  ```
+  a^d != 1 (mod n)
+    and
+  a^(2^r * d) != -1 (mod n), for all 0 <= r < s
+  ```
+
+  It turns out that for a random `a`, the probability of `n` being a strong
+  pseudoprime is <= `1/4` (see
+  [this](http://www.mat.uniroma2.it/~schoof/millerrabinpom.pdf)). We can repeat
+  this for multiple random bases `a`.
+
+  As for the RSA implementation, it's under [rsa.py](src/rsa.py).
+
+- [ ] [40. Implement an E=3 RSA Broadcast attack](src/set_5/40.py)
 
 *TODO: challenge*
