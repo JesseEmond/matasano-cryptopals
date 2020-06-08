@@ -678,7 +678,7 @@ convenience.*
   So, from `a^(n-1) = 1 (mod n)`, if `n` is prime, we can take square roots as
   long as the result is 1, and we should get -1 eventually (or reach `a^d = 1`).
 
-  In other words, a *prime number* will have:
+  In other words, a **prime number** will have:
 
   ```
   a^d = 1 (mod n)
@@ -686,7 +686,7 @@ convenience.*
   a^(2^r * d) = -1 (mod n), for some 0 <= r < s
   ```
 
-  From the contrapositive, we can "witness" that `n` is *composite* if:
+  From the contrapositive, we can "witness" that `n` is **composite** if:
 
   ```
   a^d != 1 (mod n)
