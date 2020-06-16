@@ -701,7 +701,7 @@ convenience.*
 
   As for the RSA implementation, it's under [rsa.py](src/rsa.py).
 
-- [ ] [40. Implement an E=3 RSA Broadcast attack](src/set_5/40.py)
+- [x] [40. Implement an E=3 RSA Broadcast attack](src/set_5/40.py)
 
   For this challenge, we'll make use of the
   ["Chinese Remainder Theorem"](https://en.wikipedia.org/wiki/Chinese_remainder_theorem).
@@ -761,6 +761,8 @@ convenience.*
   congruences.
   ```
 
+  The code lies under [mod.py](src/mod.py).
+
   In our case, we have the following examples:
   ```
   plaintext^3 = ciphertext_1  (mod N_1)
@@ -774,6 +776,24 @@ convenience.*
   With the Sun Zi theorem, we can recover `plaintext^3`, and compute the cube
   root.
 
-  TODO how to compute cube root
+  To compute the integer cube root, I found the following links to be super
+  helpful to understand how we can apply Newton's Method and prove that the
+  number of iterations is `O(lg lg n)`. Note that we could have done a dumb
+  algorithm where we do a binary search over `[1, n/2]`, and that would have
+  been `O(lg n)` iterations, but it's interesting to see how to do it in a
+  smarter way!
+
+  Links: [isqrt](https://www.akalin.com/computing-isqrt)
+  [iroot](https://www.akalin.com/computing-iroot)
+
+  The code lies under [ints.py](src/ints.py).
+
+  TODO what if it had static padding (wrapped around)? Can we search through the
+  multiples of `M` (CRT result would still hold)?
+
+
+## Set 6: RSA and DSA
+
+- [ ] [41. Implement unpadded message recovery oracle](src/set_6/41.py)
 
 *TODO: challenge*
