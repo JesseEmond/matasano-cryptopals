@@ -703,4 +703,77 @@ convenience.*
 
 - [ ] [40. Implement an E=3 RSA Broadcast attack](src/set_5/40.py)
 
+  For this challenge, we'll make use of the
+  ["Chinese Remainder Theorem"](https://en.wikipedia.org/wiki/Chinese_remainder_theorem).
+
+  As a side-note, I was interested in the origin of the name (i.e. why wasn't it
+  named after the person that found the theorem, like we've done for Euler,
+  Fermat, and countless others). On
+  [mathoverflow](https://mathoverflow.net/q/11951), there is some mention of the
+  difficulties in knowing exactly where this problem first appeared, but a good
+  name for the theorem might be the
+  [Sun Zi Theorem](http://people.math.harvard.edu/~knill/crt/lib/Kangsheng.pdf)
+  (this reference also contains interesting history around the problem and its
+  origins). One of my favorite quotes while looking this up, from the last
+  paragraph of that last reference:
+
+  > Euler, Lagrange and Gauss presented their achievements in indeterminate
+  > analysis in the 18th century [...] at that time Europeans considered their
+  > results in mathematics unique and very significant. They did not know that
+  > they had been completely solved in the East at least several hundred years
+  > earlier.
+
+  ... There's something there. :)
+
+  Let's look at the Sun Zi theorem and
+  [solution](https://math-physics-problems.wikia.org/wiki/Sun_Zi%27s_Algorithm):
+
+  ```
+  From the congruences:
+    N = r_1  (mod m_1)
+    N = r_2  (mod m_2)
+    ...
+    N = r_n  (mod m_n)
+
+  where m_1, m_2, ..., m_n mutually coprime.
+
+  From known r_i, m_i (1 <= i <= n), what is N?
+  ```
+
+  The solution:
+
+  ```
+  Let M = m_1 * m_2 * ... * m_n and M_i = M / m_i
+  Note that gcd(M_i, m_i) = 1.
+  Note that M_i = 0  (mod M_j) for i != j.
+
+  Let s_1, s_2, ..., s_n be the modular inverses of M_1, M_2, ..., M_n,
+  respectively.
+  I.e., s_i * M_i = 1  (mod m_i)
+  Note that s_i * r_i * M_i = r_i  (mod m_i).
+
+  Since M_i = 0  (mod M_j) for i != j, then r_i * M_i * s_i = 0  (mod m_j).
+
+  Then, the sum \sum_{i=0}^n {r_i * M_i * s_i} satisfies all the initial
+  congruences.
+
+  Any number equal to the sum (mod M) will be a solution to the system of
+  congruences.
+  ```
+
+  In our case, we have the following examples:
+  ```
+  plaintext^3 = ciphertext_1  (mod N_1)
+  plaintext^3 = ciphertext_2  (mod N_2)
+  plaintext^3 = ciphertext_3  (mod N_3)
+
+  With gcd(N_i, N_j) != 1 for i != j. If that were not the case, we could
+  trivially factor p, q for one of them and recover d and plaintext this way.
+  ```
+
+  With the Sun Zi theorem, we can recover `plaintext^3`, and compute the cube
+  root.
+
+  TODO how to compute cube root
+
 *TODO: challenge*
