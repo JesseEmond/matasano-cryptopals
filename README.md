@@ -752,7 +752,7 @@ convenience.*
   I.e., s_i * M_i = 1  (mod m_i)
   Note that s_i * r_i * M_i = r_i  (mod m_i).
 
-  Since M_i = 0  (mod M_j) for i != j, then r_i * M_i * s_i = 0  (mod m_j).
+  Since M_i = 0  (mod m_j) for i != j, then r_i * M_i * s_i = 0  (mod m_j).
 
   Then, the sum \sum_{i=0}^n {r_i * M_i * s_i} satisfies all the initial
   congruences.
