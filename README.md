@@ -797,6 +797,23 @@ convenience.*
 
 ## Set 6: RSA and DSA
 
-- [ ] [41. Implement unpadded message recovery oracle](src/set_6/41.py)
+- [x] [41. Implement unpadded message recovery oracle](src/set_6/41.py)
+
+  This one is fairly straightforward. We captured `c = p^e mod N` and want to
+  recover `p`. By getting the decrypted `c' = (s^e mod N) * c mod N`, we can
+  recover `p`:
+
+  ```
+  c' = (s^e mod N) * c  mod N
+     = s^e * p^e        mod N
+     = (s * p)^e        mod N
+
+  p' = decrypt(c')
+     = s * p            mod N
+
+  => p = s^(-1) * p'    mod N
+  ```
+
+- [ ] [42. Bleichenbacher's e=3 RSA Attack](src/set_6/42.py)
 
 *TODO: challenge*
