@@ -755,7 +755,8 @@ convenience.*
   Since M_i = 0  (mod m_j) for i != j, then r_i * M_i * s_i = 0  (mod m_j).
 
   Then, the sum \sum_{i=1}^n {r_i * M_i * s_i} satisfies all the initial
-  congruences.
+  congruences. This is because we'll get 0 terms for indices != i, with only the
+  term r_i left for a given modulus m_i.
 
   Any number equal to the sum (mod M) will be a solution to the system of
   congruences.
