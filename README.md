@@ -745,7 +745,7 @@ convenience.*
   ```
   Let M = m_1 * m_2 * ... * m_n and M_i = M / m_i
   Note that gcd(M_i, m_i) = 1.
-  Note that M_i = 0  (mod M_j) for i != j.
+  Note that M_i = 0  (mod m_j) for i != j.
 
   Let s_1, s_2, ..., s_n be the modular inverses of M_1, M_2, ..., M_n,
   respectively.
