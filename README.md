@@ -788,8 +788,11 @@ convenience.*
 
   The code lies under [ints.py](src/ints.py).
 
-  TODO what if it had static padding (wrapped around)? Can we search through the
-  multiples of `M` (CRT result would still hold)?
+  Note that all of this is not necessary if `m` is small enough to not even wrap
+  in the first place (`m**3 < N`, e.g. `bits(m) * e < N`). In that case, we can
+  directly take the cube root. To force `m**e` to wrap around `N`, we can add
+  static padding to `m` to make it close to `bits(N)`, but then it is vulnerable
+  to the attack documented here.
 
 
 ## Set 6: RSA and DSA
