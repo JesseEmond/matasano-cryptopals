@@ -58,7 +58,7 @@ print("[*] Forging signature for the same validator, crafting it 'by hand'...")
 # See https://mailarchive.ietf.org/arch/msg/openpgp/5rnE9ZRN1AokBVj3VqblGlP63QE/
 # Let's work with a 3072-bit key (more space to find a root).
 # Size of 00<digest_info> for SHA-1 is 36 bytes (288 bits).
-# We'll be producing 00 01 FF ... FF 00 <digest_info> <GARBAGE>.
+# We'll be producing 00 01 FF ... FF 00 <digest_info> <garbage>.
 # Reminder that (A-B)^3 = A^3 - 3(A^2)B + 3A(B^2) - B^3.
 # So if we can formulate our target as something that looks like that, we can
 # just use (A-B) as our forged signature.
@@ -76,7 +76,7 @@ print("[*] Forging signature for the same validator, crafting it 'by hand'...")
 # 2^(3072 - 15) - 2^(2072 + 288) = 2^3057 - 2^2360
 # '15' is the number of 0 bits in 00 01
 # '2072 + 288' is the number of bits for <D> <GARBAGE>
-# By doing one minus the other, we can the numerical value for having a series
+# By doing one minus the other, we get the numerical value for having a series
 # of 1s in the positions where we have 01 FF ... FF.
 
 # Numerically:
@@ -93,7 +93,7 @@ print("[*] Forging signature for the same validator, crafting it 'by hand'...")
 # = 2^3057 - (3*2^2038*N*2^34/3) + (3*2^1019*N^2*2^68/9) - (N^3*2^102/27)
 # = 2^3057 - N*2^2072 + N^2*2^1087/3 - N^3*2^102/27
 # This fits the pattern:
-# 2^3057A - N*2^2072 + garbage
+# 2^3057 - N*2^2072 + garbage
 # So it works!
 print("    Generating 3072-bit key...")
 r = rsa.Rsa(e=3, bits=3072)

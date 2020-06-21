@@ -815,8 +815,108 @@ convenience.*
   => p = s^(-1) * p'    mod N
   ```
 
-- [ ] [42. Bleichenbacher's e=3 RSA Attack](src/set_6/42.py)
+- [x] [42. Bleichenbacher's e=3 RSA Attack](src/set_6/42.py)
 
+  This attack comes from the
+  [notes](https://mailarchive.ietf.org/arch/msg/openpgp/5rnE9ZRN1AokBVj3VqblGlP63QE/)
+  of Bleichenbacher.
+
+  PKCS v1.5 ([RFC3447](https://tools.ietf.org/html/rfc3447)) encodes a
+  particular digest as:
+
+  ```
+  00 01 FF ... FF <digest_info>
+
+  digest_info is ASN.1 DER-encoded in the following way:
+  SEQUENCE {
+    SEQUENCE {
+      OBJECT-IDENTIFIER (hash algorithm oid),
+      NULL
+    }
+    OCTET-STRING (hash digest)
+  }
+  ```
+
+  This is implemented in [pkcs1_v1_5.py](src/pkcs1_v1_5.py). A subset of ASN.1
+  DER is implemented under [asn1.py](src/asn1.py).
+
+  The vulnerability in this challenge comes from extracting the `digest_info`
+  essentially via a regex `\x00\x01\xff+\x00(.*)`, without ensuring that there
+  are enough `ff`s to cover the entire space (i.e. without making sure that
+  `digest_info` is right-justified). Because ASN.1 encodes the length of the
+  digest, this will accept a signature that encrypts as:
+
+  ```
+  00 01 FF .. FF <digest_info> <garbage>
+  ```
+
+  Because signature validation implies doing `signature^3` and checking the
+  digest, if we are able to find a value that cubes to something of the form
+  above, we can forge a signature.
+
+  We can do so like this:
+
+  ```
+  digest = hashlib.sha1(b"hi mom").digest()
+  target_digest_info = pkcs1_v1_5.encode_sha1(digest, total_len=1024//8)
+  forged_padded = b"\x00\x01\xFF" + target_digest_info
+  forged_padded += b"\xff" * (1024 - len(forged_padded))
+  forged_signature = iroot(int.from_bytes(forged_padded, "big"), 3)
+  ```
+
+  ... And it works! Note that I couldn't get this to work at first with SHA-256,
+  because there's not much space to find a valid cube root with a SHA-256 digest
+  and 1024 bits total size.
+
+  Out of curiosity, I also implemented the "by hand" approach from 
+  [Bleichenbacher](https://mailarchive.ietf.org/arch/msg/openpgp/5rnE9ZRN1AokBVj3VqblGlP63QE/)
+  , with some personal notes to understand why it works:
+
+  ```
+  Let's work with a 3072-bit key (more space to find a root).
+  Size of 00<digest_info> for SHA-1 is 36 bytes (288 bits).
+  We'll be producing 00 01 FF ... FF 00 <digest_info> <garbage>.
+
+  Reminder that (A-B)^3 = A^3 - 3(A^2)B + 3A(B^2) - B^3.
+  So if we can formulate our target as something that looks like that, we can
+  just use (A-B) as our forged signature.
+
+  Following Bleichenbacher's notes, we define:
+  D := 00 <digest_info>
+  N := 2^288 - D  (note 288 comes from size in bits of <digest_info>)
+  We assume that N = 0 (mod 3) (we'll have a division by 3 later).
+  We choose to place D 2072 bits over from the right (numerically, D * 2^2072).
+  Our padded version will look like:
+  00 01 FF ... FF <D> <GARBAGE>
+
+  To represent our "prefix" (00 01 FF ... FF) numerically (followed by zeros
+  since it's just the prefix), we can do:
+  2^(3072 - 15) - 2^(2072 + 288) = 2^3057 - 2^2360
+    => '15' is the number of 0 bits in 00 01
+    => '2072 + 288' is the number of bits for <D> <GARBAGE>
+  By doing one minus the other, we get the numerical value for having a series
+  of 1s in the positions where we want 01 FF ... FF.
+
+  Our padded numerical value is thus:
+  2^3057 - 2^2360 + D*2^2072 + garbage
+  This can be rewritten as:
+  2^3057 - N*2^2072 + garbage
+  The cube root of this is then 2^1019 - (N*2^34/3). That's our forged
+  signature.
+
+  To check that this works, let's cube it:
+  (2^1019 - (N * 2^34 / 3))^3  (note this is of the form (A-B)^3)
+  Reminder that (A-B)^3 = A^3 - 3(A^2)B + 3A(B^2) - B^3.
+  = (2^1019)^3 - 3*(2^1019)^2*(N*2^34/3) + 3*2^1019*(N*2^34/3)^2 - (N*2^34/3)^3
+  = 2^3057 - (3*2^2038*N*2^34/3) + (3*2^1019*N^2*2^68/9) - (N^3*2^102/27)
+  = 2^3057 - N*2^2072 + N^2*2^1087/3 - N^3*2^102/27
+  This fits the pattern:
+  2^3057 - N*2^2072 + garbage
+  So it works!
+  ```
+
+  TODO what if they also check suffix, but not that padding is all ffs
+  https://blog.filippo.io/bleichenbacher-06-signature-forgery-in-python-rsa/
   
   
 - [ ] [43. DSA key recovery from nonce](src/set_6/43.py)
