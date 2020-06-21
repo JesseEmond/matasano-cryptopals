@@ -825,7 +825,7 @@ convenience.*
   particular digest as:
 
   ```
-  00 01 FF ... FF <digest_info>
+  00 01 FF ... FF 00 <digest_info>
 
   digest_info is the following ASN.1 (DER-encoded):
   SEQUENCE {
@@ -847,7 +847,7 @@ convenience.*
   digest, this will accept a signature that encrypts as:
 
   ```
-  00 01 FF .. FF <digest_info> <garbage>
+  00 01 FF .. FF 00 <digest_info> <garbage>
   ```
 
   Because signature validation implies doing `signature^3` and checking the
@@ -859,7 +859,7 @@ convenience.*
   ```
   digest = hashlib.sha1(b"hi mom").digest()
   target_digest_info = pkcs1_v1_5.encode_sha1(digest, total_len=1024//8)
-  forged_padded = b"\x00\x01\xFF" + target_digest_info
+  forged_padded = b"\x00\x01\xFF\x00" + target_digest_info
   forged_padded += b"\xff" * (1024 - len(forged_padded))
   forged_signature = iroot(int.from_bytes(forged_padded, "big"), 3)
   ```
