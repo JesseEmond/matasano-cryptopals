@@ -827,12 +827,12 @@ convenience.*
   ```
   00 01 FF ... FF <digest_info>
 
-  digest_info is ASN.1 DER-encoded in the following way:
+  digest_info is the following ASN.1 (DER-encoded):
   SEQUENCE {
     SEQUENCE {
       OBJECT-IDENTIFIER (hash algorithm oid),
       NULL
-    }
+    },
     OCTET-STRING (hash digest)
   }
   ```
