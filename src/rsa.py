@@ -55,3 +55,9 @@ class Rsa:
         c = int.from_bytes(c, "big")
         m = self.decrypt(c)
         return byteops.int_to_bytes(m)
+
+    def sign(self, m):
+        return self.decrypt(m)
+
+    def verify(self, signature):
+        return self.encrypt(signature)

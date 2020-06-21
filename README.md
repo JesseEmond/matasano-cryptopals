@@ -817,4 +817,8 @@ convenience.*
 
 - [ ] [42. Bleichenbacher's e=3 RSA Attack](src/set_6/42.py)
 
+  
+  
+- [ ] [43. DSA key recovery from nonce](src/set_6/43.py)
+
 *TODO: challenge*
