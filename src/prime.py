@@ -1,13 +1,28 @@
 from . import random_helper
 
 
+def all_primes_under(n):
+    """Generates a list of primes under 'n', using the sieve of Eratosthenes."""
+    # 0, 1, 2 are composite, composite, prime, mark the rest 'prime' to start
+    is_prime = [False, False, True] + [True for _ in range(2, n)]
+    p = 2
+    while p * p < n:
+        for not_prime in range(p * 2, n, p):
+            is_prime[not_prime] = False
+        p += 1
+    return [idx for idx, n_is_prime in enumerate(is_prime) if n_is_prime]
+
+
+_SMALL_PRIME_LIMIT = 65000
+_SMALL_PRIMES = set(all_primes_under(_SMALL_PRIME_LIMIT))
+
+
 def is_prime(n):
     """Returns whether 'n' is a prime number."""
     assert n > 0
     if n == 1: return False
-    if n == 2: return True
-    if n % 2 == 0: return False
-    if n == 3: return True
+    if n <= _SMALL_PRIME_LIMIT: return n in _SMALL_PRIMES
+    if any(n % p == 0 for p in _SMALL_PRIMES): return False
     return miller_rabin(n)
 
 
