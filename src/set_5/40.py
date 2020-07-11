@@ -1,5 +1,5 @@
-from .. import ints
 from .. import mod
+from .. import roots
 from .. import rsa
 
 
@@ -42,7 +42,7 @@ print("[*] Recovering m^3 for small m.")
 print("      gen keys & encrypt...")
 c = rsa.Rsa(e=3, bits=1024).encrypt(PRIVATE_MESSAGE)
 print("      cube root...")
-assert ints.iroot(c, 3) == PRIVATE_MESSAGE
+assert roots.iroot(c, 3) == PRIVATE_MESSAGE
 print("      recovered!")
 
 # If we add some static "padding" at the start, causing p^3 to wrap, we can
@@ -53,10 +53,10 @@ print("      capturing 3 ciphertexts...")
 ((c_0, n_0), (c_1, n_1), (c_2, n_2)) = capture_messages(e=3, bits=1024,
                                                         padding_fn=static_pad)
 print("      checking that cube root isn't sufficient...")
-assert remove_padding(ints.iroot(c_0, 3), padding_len=3) != PRIVATE_MESSAGE
+assert remove_padding(roots.iroot(c_0, 3), padding_len=3) != PRIVATE_MESSAGE
 print("      crt...")
 c = mod.crt(residues=[c_0, c_1, c_2], moduli=[n_0, n_1, n_2])
 print("      cube root...")
-p = ints.iroot(c, 3)
+p = roots.iroot(c, 3)
 assert remove_padding(p, padding_len=3) == PRIVATE_MESSAGE
 print("      recovered!")

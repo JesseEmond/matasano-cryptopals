@@ -1,7 +1,6 @@
 from . import byteops
 from . import mod
 from . import prime
-from . import random_helper
 
 
 class Rsa:
@@ -11,8 +10,8 @@ class Rsa:
         assert (bits is not None) ^ (p is not None and q is not None)
         if bits is not None:
             while True:
-                p = random_helper.random_prime(bits // 2)
-                q = random_helper.random_prime(bits // 2)
+                p = prime.random_prime(bits // 2)
+                q = prime.random_prime(bits // 2)
                 if self.try_gen_params(p, q, e):
                     break
         elif p is not None and q is not None:

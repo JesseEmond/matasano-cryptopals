@@ -787,7 +787,7 @@ convenience.*
   Links: [isqrt](https://www.akalin.com/computing-isqrt)
   [iroot](https://www.akalin.com/computing-iroot)
 
-  The code lies under [ints.py](src/ints.py).
+  The code lies under [roots.py](src/roots.py).
 
   Note that all of this is not necessary if `m` is small enough to not even wrap
   in the first place (`m**3 < N`, e.g. `bits(m) * e < N`). In that case, we can
@@ -915,7 +915,7 @@ convenience.*
   So it works!
   ```
 
-  TODO what if they also check suffix, but not that padding is all ffs
+  TODO what if they also check suffix, but not that padding is all \xffs
   https://blog.filippo.io/bleichenbacher-06-signature-forgery-in-python-rsa/
   
   

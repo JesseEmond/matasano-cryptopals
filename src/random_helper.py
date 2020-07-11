@@ -1,8 +1,6 @@
 import os
 import random as pyrandom
 
-from . import prime
-
 
 random = pyrandom.SystemRandom()
 
@@ -23,15 +21,6 @@ def random_number(bits=None, below=None, between=None):
         min_, max_ = between
         return random.randrange(min_, max_ + 1)
     assert False
-
-
-def random_prime(bits):
-    """Returns a random prime with the number of bits specified."""
-    while True:
-        n = random_number(bits=bits)
-        n |= 1  # Force it to be odd.
-        if prime.is_prime(n):
-            return n
 
 
 def random_bytes(n):

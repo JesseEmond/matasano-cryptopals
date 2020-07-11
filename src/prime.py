@@ -101,6 +101,15 @@ def factor_powers_of_2(n):
     return s, d
 
 
+def random_prime(bits):
+    """Returns a random prime with the number of bits specified."""
+    while True:
+        n = random_helper.random_number(bits=bits)
+        n |= 1  # Force it to be odd.
+        if is_prime(n):
+            return n
+
+
 assert factor_powers_of_2(221 - 1) == (2, 55)
 
 assert is_prime(2) and is_prime(3) and not is_prime(4)
