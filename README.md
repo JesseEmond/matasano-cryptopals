@@ -915,9 +915,67 @@ convenience.*
   So it works!
   ```
 
-  TODO what if they also check suffix, but not that padding is all \xffs
-  https://blog.filippo.io/bleichenbacher-06-signature-forgery-in-python-rsa/
-  
+
+  Now, there is a more interesting variant of this attack that we can look at:
+  What if we have a validator that checks that the ASN.1 decoding has no
+  left-over (i.e. the hash is right-justified), but not that the padding is a
+  sequence of `FF`s? In other words, what if the validator checks:
+
+  ```
+  ^00 01 [^00]+ 00 <digest_info>$
+  ```
+
+  This attack broke python-rsa, as decribed in this
+  [blog post](https://blog.filippo.io/bleichenbacher-06-signature-forgery-in-python-rsa/).
+
+  We know how to find `x` such that `x^3` has a given prefix, but what about a
+  given suffix? The blog post above gives an iterative algorithm if `suffix` is
+  odd, motivated by the observation that flipping the Nth bit (from the right)
+  in `x` causes the Nth bit in `x^3` to flip, while leaving the bits 0 to N-1
+  unaffected. We can thus start from bit 0 and iteratively flip bits (as needed)
+  of `x` to find our target suffix. Once we have found the prefix and suffix of
+  our signature, we try random filler bytes in-between until we find a cube that
+  doesn't have `00`s in the padding area.
+
+  This got me curious about how to solve the cube suffix generally for even
+  suffixes and how could we show that this algorithm works for any odd number,
+  so I wrote up about this in a separate
+  [repository](https://github.com/JesseEmond/theoretical/tree/master/cube-suffix).
+  The tl;dr is that we can state this problem as:
+
+  ```
+  Solve for x in x^3 = suffix (mod 2^bitlen(suffix))
+    or, equivalently,
+  Find roots of f(x) = x^3 - suffix (mod 2^bitlen(suffix))
+    or, more generally,
+  Solve for x in f(x) = x^3 - suffix = 0 (mod p^k), for prime 'p'.
+  ```
+
+  We find that we can make use of
+  [Hensel's Lemma](https://en.wikipedia.org/wiki/Hensel%27s_lemma) to "lift" a
+  solution `(mod p^k)` to `(mod p^(k+1))` when `f'(x) != 0 (mod p)`. That
+  solution is unique and can be computed directly. We find that in our case, an
+  odd suffix implies `f'(x) != 0 (mod 2)`, which explains why we can always lift
+  a solution to the next power of 2 (the N+1th bit). For even suffixes, we need
+  a recursive approach, described in more details in the linked repository, but
+  summarized here:
+
+  ```
+  hensel_lift(f, p, k):
+    if k = 1: return [x for x in range(p) if f(x) = 0 (mod p)]
+
+    prev_roots := hensel_lift(f, p, k-1)
+    new_roots  := []
+    for r in prev_roots:
+      if f'(r) != 0 (mod p):                     # Hensel's Lemma (simple root)
+        s := (r - f(r) * f'(r)^(-1))) (mod p^k)  # Note f'(r)^(-1) is in (mod p)
+        new_roots.append(s)
+      elif f(r) = 0 (mod p^k):                   # If r+tp^(k-1) are all solutions
+        for t in range(p):
+          s := (r + tp^(k-1)) (mod p^k)
+          new_roots.append(s)
+    return new_roots
+  ```
   
 - [ ] [43. DSA key recovery from nonce](src/set_6/43.py)
 
