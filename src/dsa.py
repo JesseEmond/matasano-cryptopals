@@ -8,8 +8,9 @@ from . import sha1
 
 
 def H(a):
-    bytes_ = byteops.int_to_bytes(a)
-    digest = sha1.Sha1().update(bytes_).digest()
+    if isinstance(a, int):
+        a = byteops.int_to_bytes(a)
+    digest = sha1.Sha1().update(a).digest()
     return int.from_bytes(digest, byteorder="big")
 
 
@@ -99,6 +100,22 @@ class Dsa:
         return v == r
 
 
+def known_k(k, sign, params, y, m, h=None):
+    # s = k^(-1) (h + xr) mod q
+    # => sk = h + xr mod q
+    # => sk - h = xr mod q
+    # => x = (sk - h) / r mod q
+    h = h or H(m)
+    r, s = sign
+    r_1 = mod.modinv(r, params.q)
+    sk = (s * k) % params.q
+    x = (((sk - h) % params.q) * r_1) % params.q
+    if pow(params.g, x, params.p) == y:
+        return Dsa(params, x, y)
+    else:
+        return None
+
+
 if __name__ == "__main__":
     # Toy example from:
     # http://www.herongyang.com/Cryptography/DSA-Introduction-Algorithm-Illustration-p7-q3.html
@@ -114,10 +131,10 @@ if __name__ == "__main__":
             "2b4deb50aa18ee9e132bfa85ac4374d7f9091abc3d015efc871a584471bb1",
             16)
     q = 0xf4f47f05794b256174bba6e9b396a7707e563c5b
-    g = int("0x5958c9d3898b224b12672c0b98e06c60df923cb8bc999d119458fef538b8fa4"
-            "046c8db53039db620c094c9fa077ef389b5322a559946a71903f990f1f7e0e025"
-            "e2d7f7cf494aff1a0470f5b64c36b625a097f1651fe775323556fe00b3608c887"
-            "892878480e99041be601a62166ca6894bdd41a7054ec89f756ba9fc95302291",
+    g = int("5958c9d3898b224b12672c0b98e06c60df923cb8bc999d119458fef538b8fa404"
+            "6c8db53039db620c094c9fa077ef389b5322a559946a71903f990f1f7e0e025e2"
+            "d7f7cf494aff1a0470f5b64c36b625a097f1651fe775323556fe00b3608c88789"
+            "2878480e99041be601a62166ca6894bdd41a7054ec89f756ba9fc95302291",
             16)
     dsa = Dsa(DsaParams(p, q, g))
     sign = dsa.sign(42)

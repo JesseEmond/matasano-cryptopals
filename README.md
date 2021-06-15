@@ -977,6 +977,27 @@ convenience.*
     return new_roots
   ```
   
-- [ ] [43. DSA key recovery from nonce](src/set_6/43.py)
+- [x] [43. DSA key recovery from nonce](src/set_6/43.py)
+
+  Code for DSA lies under [dsa.py](src/dsa.py). We implement parameter
+  generation following
+  [FIPS 186](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf)
+  documentation.
+
+  We implement the key recovery as described in the challenge, derived here:
+
+  ```
+  s = k^(-1) (h + xr) mod q
+  => sk = h + xr mod q
+  => sk - h = xr mod q
+  => x = (sk - h) / r mod q
+  ```
+
+  Then, we can test `x` by checking if `g^x mod p` equals `y`.
+
+  A lot of subtle bugs because of how we manually handle `mod n` operations, as
+  opposed to using a construct like `Mod` in Sage.
+
+- [ ] [44. DSA nonce recovery from repeated nonce](src/set_6/44.py)
 
 *TODO: challenge*
