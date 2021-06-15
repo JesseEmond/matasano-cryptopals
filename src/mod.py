@@ -29,7 +29,7 @@ def modinv(a, n):
     r, _, t = egcd(n, a)
     if r != 1:
         raise ValueError("a and n are not coprime (gcd(a, n) != 1).")
-    return t
+    return t % n
 assert modinv(3, 11) == 4
 
 

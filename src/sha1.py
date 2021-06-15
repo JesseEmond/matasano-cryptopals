@@ -4,6 +4,8 @@ from . import merkle_damgard
 
 
 class Sha1(merkle_damgard.Hash):
+    OUT_LEN = 20
+
     def __init__(self, hs=None, msg_len=0):
         hs = hs or (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
         super(Sha1, self).__init__(hs, msg_len)
@@ -43,18 +45,22 @@ class Sha1(merkle_damgard.Hash):
 def sha1(message):
     return Sha1().update(message).digest()
 assert(sha1(b"The quick brown fox jumps over the lazy dog") ==
-        bytes.fromhex("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"))
+       bytes.fromhex("2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"))
 assert(sha1(b"The quick brown fox jumps over the lazy cog") ==
-        bytes.fromhex("de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3"))
+       bytes.fromhex("de9f2c7fd25e1b3afad3e85a0bd17d9b100db4b3"))
 assert(sha1(b"") ==
-        bytes.fromhex("da39a3ee5e6b4b0d3255bfef95601890afd80709"))
+       bytes.fromhex("da39a3ee5e6b4b0d3255bfef95601890afd80709"))
 
 
-def __test_length_extension():
-    new_digest, to_append = Sha1.length_extension_attack(sha1(b"hello"), len(b"hello"), b"world")
+def _test_length_extension():
+    new_digest, to_append = Sha1.length_extension_attack(sha1(b"hello"),
+                                                         len(b"hello"),
+                                                         b"world")
     padding = Sha1.length_padding(msg_len=len(b"hello"))
     assert to_append == padding + b"world"
     # Test that we're able to bootstrap from an existing digest properly.
     assert new_digest == sha1(b"hello" + padding + b"world")
 
-__test_length_extension()
+
+_test_length_extension()
+
