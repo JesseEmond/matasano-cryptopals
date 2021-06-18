@@ -1041,6 +1041,68 @@ convenience.*
 
   This also means that we just need to find a duplicate `r` in the signatures to know that `k` was reused. Then, we recover `k` with the formula above, and recover the private key with the attack from the previous challenge.
 
-- [ ] [45. DSA parameter tampering](src/set_6/45.py)
+- [x] [45. DSA parameter tampering](src/set_6/45.py)
+
+  For this one, we assume that `y` was generated initially using some `g`, and that we overwrite the `g` used in signature/verification. Otherwise, `y` would be computed using our tampered `g` and be trivial to deduce.
+
+  For `g = 0`:
+
+  ```
+  Assume we are signing "hello".
+  The signer does:
+  	r = (g^k mod p) mod q
+  	s = k^(-1) (H(m) + xr) mod q
+  So r=0.
+  And s has not dependence on the private key anymore!
+  	s = k^(-1) H(m) mod q
+  When verifying:
+  	v = (g^u1 * y^u2 mod p) mod q
+  g^u1 will give 0, so v will always be 0, so will allow any s we give, for any message.
+  E.g. (0, s) is valid for "hello", (0, s) is valid for "hi", (0, 424242) is valid for "hi".
+  ```
+
+  We had to make changes to sign/verify to pass a flag that allows 0s to avoid checks, which means that this is somewhat dependent on the implementation not making checks on `r`  or `s`.
+
+  For `g = p + 1 = 1 mod p`:
+
+  ```
+  Assume we are signing "hello".
+  The signer does:
+  	r = (g^k mod p) mod q
+  	s = k^(-1) (H(m) + xr) mod q
+  So r = 1.
+  	s = k^(-1) (H(m) + xr) mod q
+  	=> sk = H(m) + x mod q
+  Still some dependence on unknowns x and k.
+  
+  Note that verifying (r, s) would fail, because the g used for generating y
+  is not the same as what we are passing now, in our setup.
+  
+  When verifying:
+  	v = (g^u1 * y^u2 mod p) mod q
+  	  = (y^u2 mod p) mod q
+  	u2 = r/s mod q
+  If we choose some fixed z value and compute:
+  	r = (y^z mod p) mod q
+  	s = r/z mod q
+  So in our setup:
+  	u2 = r/s mod q
+  	   = r / (r/z) mod q
+  	   = z mod q
+  Verification will do:
+  	v = (y^u2 mod p) mod q
+  	  = (y^z mod p) mod q
+  	  = r mod q
+  So we can craft a signature that looks somewhat normal and will pass verification!
+  E.g.
+  	z = 2**32 -5  # Arbitrary
+  	r = Zq(pow(y, z, p))
+  	s = r / z
+  Then we can sign any string.
+  ```
+
+  
+
+- [ ] [46. RSA parity oracle](src/set_6/46.py)
 
 *TODO: challenge*

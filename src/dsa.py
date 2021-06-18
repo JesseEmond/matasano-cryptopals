@@ -73,7 +73,7 @@ class Dsa:
         self._x = x
         self.y = y
 
-    def sign(self, m, h=None, k=None):
+    def sign(self, m, h=None, k=None, allow_r_0=False):
         assert self._x is not None
         if h is None:
             h = H(m)
@@ -83,16 +83,18 @@ class Dsa:
             Zp = mod.GF(self.params.p)
             r = Zp(self.params.g)**k
             r = Zq(r.int())
-            if r != 0:
+            if r != 0 or allow_r_0:
                 s = (h + self._x * r) / k
                 if s != 0:
                     return r.int(), s.int()
 
-    def verify(self, m, sign, h=None):
+    def verify(self, m, sign, h=None, allow_zeros=False):
         if h is None:
             h = H(m)
         r, s = sign
-        if r <= 0 or r >= self.params.q or s <= 0 or s >= self.params.q:
+        if not allow_zeros and r <= 0 or s <= 0:
+            return False
+        if r >= self.params.q or s >= self.params.q:
             return False
         Zp = mod.GF(self.params.p)
         Zq = mod.GF(self.params.q)
