@@ -49,27 +49,29 @@ def hensel_lift(f, p, k):
     https://github.com/JesseEmond/theoretical/tree/main/cube-suffix
     """
     assert k > 0
+    Zp = mod.GF(p)
     if k == 1:
         # Find the roots (mod p) via bruteforce.
-        return [x for x in range(p) if f.eval(x) % p == 0]
+        return [x for x in range(p) if Zp(f.eval(x)) == 0]
     # We'll be lifting solutions starting from f(x) = 0 (mod p^(k-1)).
     roots = hensel_lift(f, p, k - 1)
     new_roots = []
     df = f.derivative()
+    Zpk = mod.GF(p, k)
     for r in roots:
-        if df.eval(r) % p != 0:  # f'(r) != 0, can apply Hensel's Lemma.
+        if Zp(df.eval(r)) != 0:  # f'(r) != 0, can apply Hensel's Lemma.
             # We can lift to the unique solution mod p^k.
-            df_r_inv = mod.modinv(df.eval(r), p)
-            new_root = (r - f.eval(r) * df_r_inv) % p**k
-            assert f.eval(new_root) % p**k == 0
+            df_r_inv = (Zp(1) / df.eval(r)).int()
+            new_root = ((Zpk(r) - f.eval(r)) * df_r_inv).int()
+            assert Zpk(f.eval(new_root)) == 0
             new_roots.append(new_root)
-        elif f.eval(r) % p**k == 0:
+        elif Zpk(f.eval(r)) == 0:
             # f'(r) = 0 (mod p), can't apply Hensel's Lemma directly.
-            # If f(r) = 0 (mod p^k), however, then every lifting of r to mod p^k
-            # is a root of f(x) mod p^k. Note that if it is not, then there is
-            # no lifting of r to mod p^k.
+            # If f(r) = 0 (mod p^k), however, then every lifting of
+            # r to mod p^k is a root of f(x) mod p^k. Note that if it is not,
+            # then there is no lifting of r to mod p^k.
             for t in range(p):
-                new_root = (r + t * p**(k - 1)) % p**k
-                assert f.eval(new_root) % p**k == 0
+                new_root = (Zpk(r) + t * p**(k - 1)).int()
+                assert Zpk(f.eval(new_root))
                 new_roots.append(new_root)
     return new_roots

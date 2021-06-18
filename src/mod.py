@@ -2,6 +2,8 @@
 
 import math
 
+from . import prime
+
 
 def egcd(a, b):
     """as + bt = gcd(a, b). Returns (gcd(a,b), s, t)"""
@@ -72,3 +74,100 @@ def crt(residues, moduli):
             for residue, M_i, s in zip(residues, M_i, s))
     return x % M
 assert crt(residues=[1, 4, 6], moduli=[3, 5, 7]) == 34
+
+
+class GF:
+    """Integers mod p^k, for prime p."""
+
+    class GFInt:
+
+        def __init__(self, x, f):
+            assert isinstance(x, int), f"x must be an int: {x}"
+            self.f = f
+            self.x = x % f.p**f.k
+
+        def _conv(self, y):
+            if isinstance(y, GF.GFInt) and y.f == self.f:
+                return y
+            return GF.GFInt(y, self.f)
+
+        def __add__(self, y):
+            return GF.GFInt(self.x + self._conv(y).x, self.f)
+
+        def __sub__(self, y):
+            return GF.GFInt(self.x - self._conv(y).x, self.f)
+
+        def __rsub__(self, y):
+            return GF.GFInt(self._conv(y).x - self.x, self.f)
+
+        def __mul__(self, y):
+            return GF.GFInt(self.x * self._conv(y).x, self.f)
+
+        __radd__ = __add__
+        __rmul__ = __mul__
+
+        def __truediv__(self, y):
+            div_y = modinv(self._conv(y).x, self.f.p**self.f.k)
+            return self * div_y
+
+        def __floordiv__(self, y):
+            return self / y
+
+        def __neg__(self):
+            return GF.GFInt(-self.x, self.f)
+
+        def __pow__(self, y):
+            y = y.int() if isinstance(y, GF.GFInt) else y
+            return GF.GFInt(pow(self.x, y, self.f.p**self.f.k), self.f)
+
+        def __eq__(self, y):
+            y = self._conv(y)
+            return self.f == y.f and self.x == y.x
+
+        def __str__(self):
+            return f"{self.f}({self.x})"
+
+        def int(self):
+            return self.x
+
+    def __init__(self, p, k=1, verify=False):
+        if verify:
+            assert prime.is_prime(p)
+        self.p = p
+        self.k = k
+
+    def __call__(self, a):
+        return GF.GFInt(a, self)
+
+    def __eq__(self, f):
+        return self.p == f.p and self.k == f.k
+
+    def __str__(self):
+        if self.k == 1:
+            return f"GF({self.p})"
+        else:
+            return f"GF({self.p}^{self.k})"
+
+
+if __name__ == "__main__":
+    x = GF(5)(17)
+    assert x.int() == 2
+    x += 2
+    assert x.int() == 4
+    x -= 6
+    assert x.int() == 3
+    x *= 2
+    assert x.int() == 1
+    x /= 4
+    assert x.int() == 4, x.int()
+    assert (x * 4).int() == 1
+    assert x == GF(5)(4)
+    assert -x == GF(5)(1)
+    assert GF(5)(2)**3 == GF(5)(3)
+
+    # Just make sure we can call reversed versions of fns
+    x = GF(5)(0)
+    assert x + 2 == GF(5)(2)
+    assert 2 + x == GF(5)(2)
+    assert x - 1 == GF(5)(4)
+    assert 1 - x == GF(5)(1)

@@ -79,12 +79,14 @@ class Dsa:
             h = H(m)
         while True:
             k = k or random_helper.random_number(between=[1, self.params.q-1])
-            r = pow(self.params.g, k, self.params.p) % self.params.q
+            Zq = mod.GF(self.params.q)
+            Zp = mod.GF(self.params.p)
+            r = Zp(self.params.g)**k
+            r = Zq(r.int())
             if r != 0:
-                k_1 = mod.modinv(k, self.params.q)
-                s = (k_1 * (h + self._x * r)) % self.params.q
+                s = (h + self._x * r) / k
                 if s != 0:
-                    return r, s
+                    return r.int(), s.int()
 
     def verify(self, m, sign, h=None):
         if h is None:
@@ -92,11 +94,13 @@ class Dsa:
         r, s = sign
         if r <= 0 or r >= self.params.q or s <= 0 or s >= self.params.q:
             return False
-        w = mod.modinv(s, self.params.q)
-        u1 = (h * w) % self.params.q
-        u2 = (r * w) % self.params.q
-        v = ((pow(self.params.g, u1, self.params.p) *
-              pow(self.y, u2, self.params.p)) % self.params.p) % self.params.q
+        Zp = mod.GF(self.params.p)
+        Zq = mod.GF(self.params.q)
+        w = Zq(s) ** -1
+        u1 = Zq(h) * w
+        u2 = Zq(r) * w
+        v = Zp(self.params.g)**u1 * Zp(self.y)**u2
+        v = Zq(v.int())
         return v == r
 
 
@@ -107,11 +111,11 @@ def known_k(k, sign, params, y, m, h=None):
     # => x = (sk - h) / r mod q
     h = h or H(m)
     r, s = sign
-    r_1 = mod.modinv(r, params.q)
-    sk = (s * k) % params.q
-    x = (((sk - h) % params.q) * r_1) % params.q
-    if pow(params.g, x, params.p) == y:
-        return Dsa(params, x, y)
+    Zq = mod.GF(params.q)
+    Zp = mod.GF(params.p)
+    x = (Zq(s)*k - h) / r
+    if Zp(params.g)**x == y:
+        return Dsa(params, x.int(), y)
     else:
         return None
 
