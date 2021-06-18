@@ -87,7 +87,7 @@ convenience.*
 
   When using ECB, two identical plaintext blocks will encrypt to the same
   ciphertext block.
-    
+  
   Therefore, a block that contains duplicate plaintext blocks will contain
   duplicate ciphertext blocks once encrypted.
 
@@ -976,13 +976,11 @@ convenience.*
           new_roots.append(s)
     return new_roots
   ```
-  
+
 - [x] [43. DSA key recovery from nonce](src/set_6/43.py)
 
   Code for DSA lies under [dsa.py](src/dsa.py). We implement parameter
-  generation following
-  [FIPS 186](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf)
-  documentation.
+  generation following [FIPS 186-4](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf) documentation.
 
   We implement the key recovery as described in the challenge, derived here:
 
@@ -997,6 +995,31 @@ convenience.*
 
   A lot of subtle bugs because of how we manually handle `mod n` operations, as
   opposed to using a construct like `Mod` in Sage.
+
+  Regarding DSA's correctness (i.e. why does signature validation work), if we follow the notes on Wikipedia:
+
+  ```
+  Note that g = h^((p-1)/q)         mod p.
+  This means that g^q = h^(p-1) = 1 mod p  (Fermat's little theorem)
+  With this and g > 0, q is prime => g must have order q.
+  
+  The signer computes:
+  s = k^(-1) (H(m) + xr) mod q
+  Which we can rearrange:
+  k = H(m)s^(-1) + xrs^(-1) mod q
+    = H(m)w + xrw           mod q
+  Now, since g has order q and k = H(m)w + xrw mod q:
+  g^k = g^(H(m)w) g^(xrw) mod p
+      = g^(H(m)w) y^(rw)  mod p
+      = g^u1 y^u2         mod p
+      
+  And when verifying:
+  r = (g^k mod p)       mod q
+    = (g^u1 y^u2 mod p) mod q
+    = v
+  ```
+
+  Regarding the FIP 186-4 parameter generation procedure, it seems a bit cryptic at first. I found [this answer](https://stackoverflow.com/a/21273368/395386) helpful in understanding why it is done this way -- it is mainly to be able to verify the generation through a seed. The computation shifts and adds multiple hash outputs to generate a pseudorandom sequence, then subtracts a remainder to have it be `p = 1 mod 2q` (IIUC so that `q` divides `p-1`, and so that it has an odd number). Alternatively, we could have generated a sequence of random bits, set the top and bottom bits to `1`, and done a similar trick to make `p = 1 mod q`.
 
 - [ ] [44. DSA nonce recovery from repeated nonce](src/set_6/44.py)
 

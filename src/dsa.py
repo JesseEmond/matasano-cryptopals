@@ -17,7 +17,7 @@ def H(a):
 class DsaParams:
 
     def generate(L, N, seedlen):
-        """Following FIPS 186. Using SHA-1.
+        """Following FIPS 186-4. Using SHA-1.
 
         Args:
             L: Desired length of prime p, in bits.
