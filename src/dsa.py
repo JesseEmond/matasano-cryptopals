@@ -104,20 +104,53 @@ class Dsa:
         return v == r
 
 
-def known_k(k, sign, params, y, m, h=None):
+def known_k(k, sign, dsa, m, h=None):
     # s = k^(-1) (h + xr) mod q
     # => sk = h + xr mod q
     # => sk - h = xr mod q
     # => x = (sk - h) / r mod q
     h = h or H(m)
     r, s = sign
-    Zq = mod.GF(params.q)
-    Zp = mod.GF(params.p)
+    Zq = mod.GF(dsa.params.q)
+    Zp = mod.GF(dsa.params.p)
     x = (Zq(s)*k - h) / r
-    if Zp(params.g)**x == y:
-        return Dsa(params, x.int(), y)
+    if Zp(dsa.params.g)**x == dsa.y:
+        return Dsa(dsa.params, x.int(), dsa.y)
     else:
         return None
+
+
+def k_reuse(msgs, signs, dsa):
+    """Find a k that was reused to recover the private key.
+
+    Returns: (dsa, msg, sign, k)
+    """
+    assert len(msgs) == len(signs)
+    Zq = mod.GF(dsa.params.q)
+    rs = {}
+    for m1, sign in zip(msgs, signs):
+        r, s1 = sign
+        if r in rs:
+            # k was reused! Can recover it.
+            # (in mod q)
+            # s1 = (h1 + x * r1) / k
+            # s2 = (h2 + x * r2) / k
+            # and r1 = r2 (since r = (g^k mod p) mod q)
+            #
+            # s1 - s2
+            # => k (s1 - s2) = h1 + x * r - (h2 + x * r)
+            # => k (s1 - s2) = h1 - h2
+            # => k = (h1 - h2) / (s1 - s2)
+            m2, (_, s2) = rs[r]
+            h1, h2 = H(m1), H(m2)
+            k = Zq(h1 - h2) / Zq(s1 - s2)
+            k = k.int()
+            d = known_k(k, sign, Dsa(dsa.params, y=dsa.y),
+                        m=None, h=h1)
+            if d is not None:
+                return d, m1, sign, k
+        rs[r] = (m1, sign)
+    return None
 
 
 if __name__ == "__main__":

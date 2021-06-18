@@ -35,7 +35,7 @@ d = None
 for k in range(2**16):
     if k % 5000 == 0:
         print(f"Trying k={k}...")
-    d = dsa.known_k(k, sign, params, y, m=None, h=h)
+    d = dsa.known_k(k, sign, dsa.Dsa(params, y=y), m=None, h=h)
     if d:
         print(f"Found! k={k}")
         break

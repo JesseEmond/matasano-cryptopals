@@ -1021,6 +1021,26 @@ convenience.*
 
   Regarding the FIP 186-4 parameter generation procedure, it seems a bit cryptic at first. I found [this answer](https://stackoverflow.com/a/21273368/395386) helpful in understanding why it is done this way -- it is mainly to be able to verify the generation through a seed. The computation shifts and adds multiple hash outputs to generate a pseudorandom sequence, then subtracts a remainder to have it be `p = 1 mod 2q` (IIUC so that `q` divides `p-1`, and so that it has an odd number). Alternatively, we could have generated a sequence of random bits, set the top and bottom bits to `1`, and done a similar trick to make `p = 1 mod q`.
 
-- [ ] [44. DSA nonce recovery from repeated nonce](src/set_6/44.py)
+- [x] [44. DSA nonce recovery from repeated nonce](src/set_6/44.py)
+
+  The formula comes from:
+
+  ```
+  Assuming k was reused for (m1, s1) and (m2, s2):
+  (all mod q)
+  s1 = (h1 + x * r1) / k
+  s2 = (h2 + x * r2) / k
+  r1 = r2, since r = ((g^k) mod p) mod q
+  
+  Then:
+  s1 - s2
+  => k (s1 - s2) = h1 + xr - (h2 + xr)
+  => k (s1 - s2) = h1 - h2
+  => k = (h1 - h2) / (s1 - s2)
+  ```
+
+  This also means that we just need to find a duplicate `r` in the signatures to know that `k` was reused. Then, we recover `k` with the formula above, and recover the private key with the attack from the previous challenge.
+
+- [ ] [45. DSA parameter tampering](src/set_6/45.py)
 
 *TODO: challenge*
