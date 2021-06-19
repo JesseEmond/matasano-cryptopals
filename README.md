@@ -1101,8 +1101,93 @@ convenience.*
   Then we can sign any string.
   ```
 
-  
+- [x] [46. RSA parity oracle](src/set_6/46.py)
 
-- [ ] [46. RSA parity oracle](src/set_6/46.py)
+  When we manipulate our ciphertext `c = p^e mod n`, we mess with the plaintext `p`:
+
+  ```
+  2^e * c mod n
+  = 2^e * p^e mod n
+  = (2p)^e mod n
+  i.e. ciphertext for 2p
+  ```
+
+  Through that, knowing that `n` is odd, being the product of two odd primes, we know that an even number going over the modulus once will produce an odd number `2p - n = even - odd = odd`. We can start with a range for our plaintext value of `[0, n)` and do `log2(n)` steps to narrow it down to our exact plaintext value.
+
+  So, if we look at a small example:
+
+  ```python
+  p, q = 3, 5
+  n = p * q  # 15
+  phi = (p-1) * (q-1)
+  e = 3
+  d = pow(e, -1, phi)  # Nice Python 3.8 feature :)
+  pt = 2  # what we want to recover
+  ct = pow(pt, e, n)  # what we're given, 8
+  oracle = lambda c: pow(c, d, n) % 2 == 0
+  
+  # 4 iterations, since n.bit_length() == 4
+  # 0 <= pt < 15
+  # Double our plaintext through our ciphertext
+  ct = (ct * pow(2, e, n)) % n  # 2pt, encrypted
+  print(oracle(ct))  # True, did not wrap. I.e. 2pt < 15 (that is, 4 < 15)
+  
+  # 0 <= pt < 15/2
+  ct = (ct * pow(2, e, n)) % n  # 4pt, encrypted
+  print(oracle(ct))  # True, did not wrap. I.e. 4pt < 15 (that is, 8 < 15)
+  
+  # 0 <= p < 15/4
+  ct = (ct * pow(2, e, n)) % n  # 8pt, encrypted
+  print(oracle(ct))  # False, wrapped. I.e. 8pt >= 15 (that is, 16 >= 15)
+  
+  # 15/8 <= pt < 15/4
+  ct = (ct * pow(2, e, n)) % n  # 2(8pt-n), encrypted
+  print(oracle(ct))  # True, did not wrap. I.e. 2(8pt-n) < 15 (that is, 2 < 15)
+  
+  16pt - 2n < n
+  16pt < 3n
+  
+  # We end up with 15/8 <= pt < 3*15/16, i.e. 1.875 <= pt < 2.8125, i.e. pt = 2
+  ```
+
+  One thing that was surprising to me was that when I tried to implement it similar to a regular binary search, I was able to decrypt all the plaintext except for the last byte. E.g. with this approach:
+
+  ```python
+  lower, upper = 0, n
+  for _ in range(n.bit_length()):
+      c = (c * 2**e) % n
+      mid = (upper + lower) // 2
+      if parity_oracle_fn(c):
+          upper = mid
+      else:
+          lower = mid
+      print(byteops.int_to_bytes(upper))  # !! NOTE: Does not recover the last byte !!
+  ```
+
+  I would get an incorrect last byte (e.g. non-printable ascii). and not always the same.
+
+  Looking around, I found that a github project called _Crypton_ had the [same problem](https://github.com/ashutosh1206/Crypton/blob/30c090647c110cf76c068e4b1fdfd158032b44a6/RSA-encryption/Attack-LSBit-Oracle/lsbitoracle.py#L27). Looking around for other solutions to this challenge, I found [this repository](https://github.com/akalin/cryptopals-python3/blob/master/challenge46.py) that solved the problem by keeping track of numerators/denominators instead of using divisions in the loop. This makes sense, we can end up with bounds like `3/4 N`, and truncating multiple times along the way will create slight inaccuracies. So we can instead implement the attack like so (available in [rsa.py](src/rsa.py)):
+
+  ```python
+  lower, upper = 0, 1
+  denominator = 1
+  for _ in range(n.bit_length()):
+  	c = (c * 2**e) % n
+      delta = upper - lower
+      lower *= 2
+      upper *= 2
+      denominator *= 2
+      if parity_oracle_fn(c):
+          upper -= delta
+      else:
+          lower += delta
+      plaintext = n * upper // denominator
+      print(byteops.int_to_bytes(plaintext))
+  ```
+
+  While we're at it, also sent a [PR](https://github.com/ashutosh1206/Crypton/pull/9) to _Crypton_.
+
+
+- [ ] [47. Bleichenbacher's PKCS 1.5 Padding Oracle (Simple Case)](src/set_6/47.py)
 
 *TODO: challenge*

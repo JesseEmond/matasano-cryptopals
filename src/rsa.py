@@ -60,3 +60,44 @@ class Rsa:
 
     def verify(self, signature):
         return self.encrypt(signature)
+
+
+def attack_parity_oracle(parity_oracle_fn, ciphertext, e, n, hollywood=False):
+    """From oracle that says if plaintext is even or odd, recover plaintext.
+
+    Makes lg(n) calls to the oracle function.
+
+    Args:
+        parity_oracle_fn: Function that takes in ciphertext (bytes) and returns
+            a boolean saying if the decrypted plaintext is even.
+        ciphertext: Bytes to decrypt.
+        e: RSA encryption exponent.
+        n: RSA modulus.
+        hollywood: If we should display the upper bound at every bit.
+
+    Returns:
+        Decrypted plaintext.
+    """
+    c = int.from_bytes(ciphertext, "big")
+    # Note that we explicitly keep track of numerators/denominators, because if
+    # we just keep track of lower/upper bound values (not always ints), we lose
+    # precision from truncation and end up with invalid last few bytes.
+    lower, upper = 0, 1
+    denominator = 1
+    multiplier = pow(2, e, n)
+    for i in range(n.bit_length()):
+        c = (c * multiplier) % n
+        delta = upper - lower
+        lower *= 2
+        upper *= 2
+        denominator *= 2
+        if parity_oracle_fn(byteops.int_to_bytes(c)):
+            # Is even, so did not wrap our odd modulus. Halve our upper bound.
+            upper -= delta
+        else:
+            # Is odd, so we wrapped. Halve our lower bound.
+            lower += delta
+        plaintext = n * upper // denominator
+        if hollywood:
+            print(f"{str(i).zfill(4)}: {byteops.int_to_bytes(plaintext)}")
+    return byteops.int_to_bytes(plaintext)
