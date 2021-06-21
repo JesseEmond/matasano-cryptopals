@@ -12,8 +12,8 @@ from .. import rsa
 def sign(r, msg, bits):
     assert b"hi mom" not in msg  # Not allowed!
     digest = hashlib.sha1(msg).digest()
-    padded = pkcs1_v1_5.encode(pkcs1_v1_5.sha1_digest_info(digest),
-                               total_len=bits//8)
+    padded = pkcs1_v1_5.signing_pad(pkcs1_v1_5.sha1_digest_info(digest),
+                                    total_len=bits//8)
     return r.sign(int.from_bytes(padded, "big"))
 
 
@@ -92,7 +92,6 @@ def _forge_cubed_prefix(target_prefix, total_len, padding_len, suffix=b"",
     return byteops.int_to_bytes(forged)
 
 
-
 print("[*] Generating 1024-bit key...")
 r = rsa.Rsa(e=3, bits=1024)
 print("[*] Signing and testing validation logic...")
@@ -104,8 +103,8 @@ assert not validate_prefix_suffix(r, b"hi mom", hello_world_sign, bits=1024)
 
 print("[*] Forging signature that fools logic that only checks prefix...")
 target_hash = hashlib.sha1(b"hi mom").digest()
-forge_target = pkcs1_v1_5.encode(pkcs1_v1_5.sha1_digest_info(target_hash),
-                                 total_len=1024//8)
+forge_target = pkcs1_v1_5.signing_pad(pkcs1_v1_5.sha1_digest_info(target_hash),
+                                      total_len=1024//8)
 # target looks like 0001ffffff...ffff00<digest_info>. We'll remove a bunch of
 # 'ff's to leave some space for our imperfect cube root.
 # We "shift" digest_info left by quite a bit to make sure that we can find a

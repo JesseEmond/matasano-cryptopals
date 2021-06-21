@@ -1,6 +1,5 @@
 import base64
 
-from .. import byteops
 from .. import rsa
 
 

@@ -858,7 +858,8 @@ convenience.*
 
   ```
   digest = hashlib.sha1(b"hi mom").digest()
-  target_digest_info = pkcs1_v1_5.encode_sha1(digest, total_len=1024//8)
+  digest_info = pkcs1_v1_5.sha1_digest_info(digest)
+  target_digest_info = pkcs1_v1_5.signing_pad(digest_info, total_len=1024//8)
   forged_padded = b"\x00\x01\xFF\x00" + target_digest_info
   forged_padded += b"\xff" * (1024 - len(forged_padded))
   forged_signature = iroot(int.from_bytes(forged_padded, "big"), 3)
@@ -1188,6 +1189,64 @@ convenience.*
   While we're at it, also sent a [PR](https://github.com/ashutosh1206/Crypton/pull/9) to _Crypton_.
 
 
-- [ ] [47. Bleichenbacher's PKCS 1.5 Padding Oracle (Simple Case)](src/set_6/47.py)
+- [x] [47. Bleichenbacher's PKCS 1.5 Padding Oracle (Simple Case)](src/set_6/47.py)
+
+- [x] [48. Bleichenbacher's PKCS 1.5 Padding Oracle (Complete Case)](src/set_6/48.py)
+
+  Had to take a look at other implementations of this attack to iron out some mis-readings on my part of the formulas and exact meaning of the union of intervals in step 3, but this works out to a relatively concise algorithm! We add PKCS #1 encryption padding to [pkcs1_v1_5.py](src/pkcs1_v1_5.py) and change our RSA decryption to make use of the [CRT optimization](https://en.wikipedia.org/wiki/RSA_(cryptosystem)#Using_the_Chinese_remainder_algorithm), because this does involve running sometimes millions of oracle decryptions. We also implement a `ceil_div` function, following [this nice trick](https://stackoverflow.com/a/17511341/395386). Even with a 256-bit modulus, I would still end up often getting more than one interval, so had to implement all steps to really test things out. Challenge 48 is then the same problem, but with a larger modulus.
+  
+  Following [the paper](http://archiv.infsec.ethz.ch/education/fs08/secsem/bleichenbacher98.pdf), we end up with something along the lines of:
+  
+  ```python
+  def oracle_s(s):
+      """Test out an `s` value through our PKCS#1 oracle."""
+      return oracle((c * pow(s, e, n)) % n)
+  
+  # Step 1: Blinding. Nothing to do for us, we have a known 'c'.
+  B = 2**(8 * (k - 2))
+  M = {(2*B, 3*B-1)}
+  
+  # Step 2: Search for PKCS-conforming messages.
+  # Step 2.a: Starting the search.
+  s = next(s1 for s1 in range(ceil_div(n, 3*B), n) if oracle_s(s1))
+  
+  while len(M) > 1 or next(iter(M))[0] != next(iter(M))[1]:
+      if len(M) > 1:
+          # Step 2.b: Searching with mroe than one interval left.
+          s = next(si for si in range(s+1, n) if oracle_s(si))
+      else:
+          # Step 2.c: Searching with one interval left.
+          a, b = next(iter(M))
+          r = ceil_div(2 * (b*s - 2*B), n)
+          found = False
+          while not found:
+              s_min = ceil_div(2*B + r*n, b)
+              s_max = ceil_div(3*B + r*n, a)
+              for new_s in range(s_min, s_max):
+                  if oracle_s(new_s):
+                      found = True
+                      break
+              r += 1
+          s = new_s
+      # Step 3: Narrowing the set of solutions.
+      new_M = set()
+      for a, b in M:
+          r_min = ceil_div(a*s-3*B+1, n)
+          r_max = ceil_div(b*s-2*B, n)
+          for r in range(r_min, r_max+1):
+              interval_min = max(a, ceil_div(2*B+r*n, s))
+              interval_max = min(b, (3*B-1+r*n) // s)
+              if interval_min <= interval_max:
+                  new_M.add((interval_min, interval_max))
+      M = new_M
+  a, _ = next(iter(M))
+  m = a  # because s0 == 1
+  ```
+  
+  TODO why/how does this work
+
+## Set 7: Hashes
+
+- [ ] [49. CBC-MAC Message Forgery](src/set_7/49.py)
 
 *TODO: challenge*
