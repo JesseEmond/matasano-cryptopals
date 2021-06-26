@@ -1020,7 +1020,7 @@ convenience.*
     = v
   ```
 
-  Regarding the FIP 186-4 parameter generation procedure, it seems a bit cryptic at first. I found [this answer](https://stackoverflow.com/a/21273368/395386) helpful in understanding why it is done this way -- it is mainly to be able to verify the generation through a seed. The computation shifts and adds multiple hash outputs to generate a pseudorandom sequence, then subtracts a remainder to have it be `p = 1 mod 2q` (IIUC so that `q` divides `p-1`, and so that it has an odd number). Alternatively, we could have generated a sequence of random bits, set the top and bottom bits to `1`, and done a similar trick to make `p = 1 mod q`.
+  Regarding the FIPS 186-4 parameter generation procedure, it seems a bit cryptic at first. I found [this answer](https://stackoverflow.com/a/21273368/395386) helpful in understanding why it is done this way -- it is mainly to be able to verify the generation through a seed. The computation shifts and adds multiple hash outputs to generate a pseudorandom sequence, then subtracts a remainder to have it be `p = 1 mod 2q` (IIUC so that `q` divides `p-1`, and so that it is an odd number). Alternatively, we could have generated a sequence of random bits, set the top and bottom bits to `1`, and done a similar trick to make `p = 1 mod q`.
 
 - [x] [44. DSA nonce recovery from repeated nonce](src/set_6/44.py)
 
@@ -1212,7 +1212,7 @@ convenience.*
   
   while len(M) > 1 or next(iter(M))[0] != next(iter(M))[1]:
       if len(M) > 1:
-          # Step 2.b: Searching with mroe than one interval left.
+          # Step 2.b: Searching with more than one interval left.
           s = next(si for si in range(s+1, n) if oracle_s(si))
       else:
           # Step 2.c: Searching with one interval left.
@@ -1243,7 +1243,7 @@ convenience.*
   m = a  # because s0 == 1
   ```
   
-  TODO why/how does this work
+  I found [this resource](http://secgroup.dais.unive.it/wp-content/uploads/2012/11/Practical-Padding-Oracle-Attacks-on-RSA.html) invaluable to understand the steps of the attack and possible follow-up improvements to lower the median number of oracle calls required to decrypt.
 
 ## Set 7: Hashes
 
