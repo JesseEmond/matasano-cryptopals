@@ -1247,6 +1247,52 @@ convenience.*
 
 ## Set 7: Hashes
 
-- [ ] [49. CBC-MAC Message Forgery](src/set_7/49.py)
+- [x] [49. CBC-MAC Message Forgery](src/set_7/49.py)
+
+  It took me some time to understand the architecture described in the challenge, originally I was trying with a single server and was confused how the key management was done. I later realized that I should treat one server as the "web server", that will sign transactions after authenticating that the user owns the account, and an "API" that will apply transactions with valid MACs. Both servers share a secret key. We are in a position where we can MITM between the two servers.
+
+  For the first variant (controlled IV), we can manipulate the first block by doing the same bitflips to the IV as we are doing to the plaintext. We then make a transaction against ourselves (e.g. `from=2&to=2&amount=1`), manipulate it to make it come from Alice, then repeat each time, increasing the amount to our current balance (so that the server accepts our initial useful transaction by seeing that we have the funds).
+
+  ```python
+  # Our transaction: from=2&to=2&amount=1234...
+  #  (block 0)       ||||||||||||||||
+  # We want:         from=0&to=2&amount=1234
+  msg, iv, mac = parse(my_transaction)
+  block0 = msg[:16]
+  target = b"from=0&to=2&amou"
+  xors = xor_bytes(block0, target)
+  iv = xor_bytes(iv, xors)
+  payload = target + msg[16:] + iv + mac
+  ```
+
+  For the second variant (fixed IV), we can append a full message, as long as it's fine for our first appended block to get scrambled. This is because we are in a similar situation where we know the "IV" at a certain stage during decryption (i.e. Alice's MAC is the decryption of the last block of her padded message), we can do similar to the previous attack. but now using a plaintext to make sure the xored value comes off to the same first block as our appended message. With this, we know our final MAC will be the same as the MAC of our appended message. Now, we intercept a message from Alice, create a message with two transactions to ourselves (to have things align well), append our message to Alice's to have her also send cash to us, and repeat until we're rich.
+
+  ```python
+  alice_msg, alice_mac = parse(intercepted)
+  # We are sending: from=2&tx_list=2:0;2:1000
+  #  (block 0)      ||||||||||||||||
+  # Appending to Alice with a scrambled first block (after xors to match fixed IV), we'll get:
+  #    <Alice's msg><scrambled data>:0;2:1000
+  # We're assuming a lenient server that will accept the scrambled data and ignore that one.
+  my_msg, my_mac = parse(my_transaction)
+  block0 = my_msg[:16]
+  # Note: the fixed IV is 0.
+  block0_fixed = xor_bytes(block0, alice_mac)  # block0_fixed will give block0 when xored in CBC.
+  # Note: alice_mac was computed based on pad(alice_msg) behind-the-scenes! Do the same here.
+  payload = pad(alice_msg) + block0_fixed + my_msg[16:] + my_mac
+  ```
+
+  Remembering to pad Alice's message prior to appending our message turns out to be important.
+
+  
+
+  In a way, the nature of our protocol allowed us to attack it in such a way. Ideas for improvements:
+
+  - (not sufficient) More stringent validation of format, deny all transactions if we fail to parse one in the list.
+  - User-derived keys as opposed to a fixed key.
+  - Include the length of the message at the start, as part of the protocol (note: at the end is not sufficient).
+  - Reading [on Wikipedia](https://en.wikipedia.org/wiki/CBC-MAC), we also learn about another approach: re-encrypt the last block, using a separate key.
+
+- [ ] [50. Hashing with CBC-MAC](src/set_7/50.py)
 
 *TODO: challenge*

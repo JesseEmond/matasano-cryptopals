@@ -1,6 +1,7 @@
 import hmac as py_hmac
 import hashlib
 
+from . import aes
 from . import md4
 from . import sha1
 from . import xor
@@ -38,3 +39,7 @@ assert(hmac_sha1(b"key", b"The quick brown fox jumps over the lazy dog") ==
 
 def hmac_sha256(key, message):
     return py_hmac.new(key, message, hashlib.sha256).digest()
+
+
+def cbc_mac(key, iv, message):
+    return aes.cbc_encrypt(key, iv, message)[-16:]
