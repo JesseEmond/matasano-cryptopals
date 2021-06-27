@@ -1293,6 +1293,37 @@ convenience.*
   - Include the length of the message at the start, as part of the protocol (note: at the end is not sufficient).
   - Reading [on Wikipedia](https://en.wikipedia.org/wiki/CBC-MAC), we also learn about another approach: re-encrypt the last block, using a separate key.
 
-- [ ] [50. Hashing with CBC-MAC](src/set_7/50.py)
+- [x] [50. Hashing with CBC-MAC](src/set_7/50.py)
+
+  All that we care about to produce `target_hash` is that our last block's pre-encryption value looks like `decrypt_block(key, target_hash)`. With the known key, we can craft a Javascript message with strategic middle bytes to push our last block's pre-encryption bytes to fit:
+
+  ```python
+  assert cbc_mac_hash(b"alert('MZA who was that?');\n") == target_hash
+  target_pre = aes_decrypt_block(key, target_hash)  # What we want to dupe the hash.
+  
+  payload = b"alert('Ayo, the Wu is back!');/*"  # Open comments, we'll add noise to get there.
+  payload += b"A" * (-len(payload) % 16)  # Pad to block size for convenience
+  
+  # Figure out what `iv` will be at this stage in CBC (the last decrypted block)
+  iv = b"\x00" * 16
+  for block in get_blocks(payload):
+      block = xor_bytes(iv, block)
+      iv = aes_encrypt_block(key, block)
+  
+  # We want our last block to look like:
+  # <...>*/\x01  (close comment & \x01 for implicit CBC padding)
+  ending = b"BBBBBBBBBBBBB*/"  # Leave room for \x01 byte
+  ending_padded = ending + b"\x01"
+  
+  # Craft middle bytes to produce our target_pre bytes at the end.
+  middle_encrypted = xor_bytes(ending_padded, target_pre)
+  middle = aes_decrypt_block(key, middle_encrypted)
+  middle = xor_bytes(iv, middle)
+  
+  crafted += middle + ending
+  assert cbc_mac_hash(crafted) == target_hash
+  ```
+
+- [ ] [51. Compression Ratio Side-Channel Attacks](src/set_7/51.py)
 
 *TODO: challenge*

@@ -37,7 +37,7 @@ class BankApi:
         """V1: msg||iv||mac."""
         mac_, message = message[-16:], message[:-16]
         iv, message = message[-16:], message[:-16]
-        if mac.cbc_mac(self.secrets.key, iv, message) != mac_:
+        if mac.cbc_mac(self.secrets.key, message, iv) != mac_:
             raise ValueError("Invalid CBC-MAC.")
         parts = [part.split(b"=") for part in message.split(b"&")]
         values = {key: int(value) for key, value in parts}
@@ -52,8 +52,7 @@ class BankApi:
         """V2: msg||mac  (fixed iv)"""
         # Be lenient with validation to allow a scrambled block to go through.
         mac_, message = message[-16:], message[:-16]
-        iv = b"\x00" * 16
-        if mac.cbc_mac(self.secrets.key, iv, message) != mac_:
+        if mac.cbc_mac(self.secrets.key, message) != mac_:
             raise ValueError("Invalid CBC-MAC.")
         values = {}
         for key_value in message.split(b"&"):
@@ -96,15 +95,14 @@ class BankServer:
             msg = f"from={self.from_id}&to={to_id}&amount={amount}"
             msg = msg.encode("ascii")
             iv = random_helper.random_bytes(16)
-            mac_ = mac.cbc_mac(self._key, iv, msg)
+            mac_ = mac.cbc_mac(self._key, msg, iv)
             api.transfer_v1(msg + iv + mac_)
 
         def transfer_v2(self, txns, api):
             msg = f"from={self.from_id}&tx_list="
             msg += ";".join(f"{to}:{amount}" for to, amount in txns)
             msg = msg.encode("ascii")
-            iv = b"\x00" * 16
-            mac_ = mac.cbc_mac(self._key, iv, msg)
+            mac_ = mac.cbc_mac(self._key, msg)
             api.transfer_v2(msg + mac_)
 
     def __init__(self, secrets):

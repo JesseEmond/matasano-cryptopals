@@ -41,5 +41,7 @@ def hmac_sha256(key, message):
     return py_hmac.new(key, message, hashlib.sha256).digest()
 
 
-def cbc_mac(key, iv, message):
+def cbc_mac(key, message, iv=None):
+    """If iv is not given, uses IV=0s."""
+    iv = iv or b"\x00" * 16
     return aes.cbc_encrypt(key, iv, message)[-16:]
