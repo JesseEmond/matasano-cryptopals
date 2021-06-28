@@ -1324,6 +1324,62 @@ convenience.*
   assert cbc_mac_hash(crafted) == target_hash
   ```
 
-- [ ] [51. Compression Ratio Side-Channel Attacks](src/set_7/51.py)
+- [x] [51. Compression Ratio Side-Channel Attacks](src/set_7/51.py)
+
+  The first case is relatively simple -- try every char, remember the ones that produced the lower oracle length (so more compressed). Here it's possible that we have more than one candidate, since the compressions operates at the bit level and we are getting byte-level information, it can happen that our guess doesn't cross a byte boundary. To overcome this, when we have multiple candidates, we try each of them as if they were now part of our known prefix and see which one gave us the shorter next-step of our next iteration. This is a bit wasteful in terms of oracle calls, but gives a relatively concise algorithm where we can reuse a function for "give me all next-letter candidates with this prefix".
+
+  The block encryption case is trickier, because due to block-padding during encryption, we need to be at a block boundary to get informative oracle lengths. I approached this one by a simple retry approach of the previous algorithm: if we failed to fully deduce the next byte (even after trying each candidates at the next stage), retry with extra padding before our known prefix. We add a random byte to make our padding less likely to be compressible. Eventually, this will lead our next byte to fall on a block boundary, where we can do our previous attack successfully. Again, this is wasteful in terms of oracle calls (we could maybe figure out where we are in a block, then reusing that information to pad for the next bytes to guess), but keeps the code simple while still being functional.
+
+  ```python
+  def decrypt_compression(oracle_fn, known_prefix, done_fn, block_based=False):
+      decrypted = bytearray()
+      padding = b""  # For block-based decryption.
+      while not done_fn(decrypted):
+          prefix = padding + known_prefix + decrypted
+          candidates, _ = next_char_candidates(oracle_fn, prefix)
+          if len(candidates) > 1:
+              # Didn't cross a byte boundary, perhaps. Try each one on the next step
+              # to narrow down our candidates to one.
+              candidates = narrow_candidates(candidates, oracle_fn, prefix)
+              if len(candidates) > 1:
+                  assert block_based, "For byte-based decryption, this should have worked."
+                  # Perhaps we didn't cross a block boundary. Try again, with extra
+                  # random padding.
+                  rand_byte = random_number(below=128)  # ascii char
+                  padding += byte([rand_byte])
+                  continue
+          decrypted.append(ord(candidates[0]))
+      return bytes(decrypted)
+  
+  def next_char_candidates(oracle_fn, prefix):
+      alphabet = string.printable
+      letters_lens = {letter: oracle_fn(prefix + letter.encode("ascii")) for letter in alphabet}
+      best_len = min(letters_lens.values())
+      candidates = [letter for letter, len_ in letters_lens.items()
+                    if len_ == best_len]
+      return candidates, best_len
+  
+  def narrow_candidates(candidates, oracle_fn, prefix):
+      next_candidates = {
+          letter: next_char_candidates(oracle_fn, prefix + letter.encode("ascii"))
+          for letter in candidates
+      }
+      best_len = min(oracle_len for _, (_, oracle_len) in next_candidates.items())
+      best_candidates = [letter for letter, (_, oracle_len) in next_candidates.items()
+                         if oracle_len == best_len]
+      return best_candidates
+  
+  
+  # Usage:
+  ends_in_newline = lambda text: text.endswith(b"\n")
+  print(decrypt_compression(oracle_stream_cipher, known_prefix=b"sessionid=",
+                            done_fn=ends_in_newline))
+  print(decrypt_compression(oracle_block_cipher, known_prefix=b"sessionid=",
+                            done_fn=ends_in_newline, block_based=True))
+  ```
+
+  
+
+- [ ] [52. Iterated Hash Function Multicollisions](src/set_7/52.py)
 
 *TODO: challenge*
