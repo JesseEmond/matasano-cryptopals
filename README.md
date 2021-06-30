@@ -4,6 +4,7 @@
 
 *Note: most links below are just links to files within this repo for your
 convenience.*
+
 ## Set 1: Basics
 - [x] [1. Convert hex to base64](src/set_1/01.py)
 
@@ -365,7 +366,7 @@ convenience.*
   
   Just to make sure I looked at how `numpy`'s random and it does generate
   the same state as us when seeding. Therefore, the tests for this one use
-  values that I extracted with C++'s implementation.
+  values that I extracted with C++'s implementation.¨
 
 - [x] [22. Crack an MT19937 seed](src/set_3/22.py)
 
@@ -469,7 +470,7 @@ convenience.*
   If we `update` that SHA-1, we can then inject whatever we want.
 
   In practice, since we don't know the length of the password (pseudocode):
-  ```
+  ```python
   # Assuming we have 'digest = H(secret + msg)' and don't know 'secret'.
   for secret_len in range(128):  # some upper-bound
     h = unpack(digest)
@@ -588,7 +589,7 @@ convenience.*
   If it didn't, like in the challenge, then we can do an offline brute-force of
   `s`, without knowing the password verifier `v`. We do (pseudocode):
 
-  ```
+  ```python
   # Known from eaves-dropping an example: salt, A, u, hmac
   # Forced via MITM: b
   for password in dictionary:
@@ -616,7 +617,7 @@ convenience.*
   against offline bruteforce, but we have to be careful about it. If we were to
   do e.g. `v * g^b mod n` (multiply), we could also attack it:
 
-  ```
+  ```python
   x = H(salt + password)
   v = pow(g, x, n)
   # Assuming we sent `B = g^b mod n` instead of `B = v * g^b mod n` during mitm.
@@ -1378,8 +1379,71 @@ convenience.*
                             done_fn=ends_in_newline, block_based=True))
   ```
 
-  
+- [x] [52. Iterated Hash Function Multicollisions](src/set_7/52.py)
 
-- [ ] [52. Iterated Hash Function Multicollisions](src/set_7/52.py)
+  We can write a generic implementation of collision generation directly as part of our [merkle_damgard.py](src/merkle_damgard.py) class. In particular, we can turn this in to a `CollisionGenerator`class to make it easier to do the second part, where we have a chance of not finding a `g` collision with `b2/2` `f` collisions. By having it as a class that remembers its state, we can just do the extra work of generating twice as many collisions by finding one more block, as opposed to starting over with `n+1`. This ends up looking like:
+
+  ```python
+  class CollisionGenerator:
+      """Helper class to iteratively generator more collisions of a MD hash."""
+      def __init__(self, hash_cls: merkle_damgard.Hash):
+          self.hash_cls = hash_cls
+          # Sequential pairs of blocks that give a collision under 'hash_cls'.
+          # With 'n' pairs of colliding blocks, we can generate 2**n collisions.
+          self.colliding_blocks = []
+          self.current_state = hash_cls()._state  # start from default internal state
+          self.n = 0  # Number of steps that we ran (2**n collisions).
+          self.num_calls = 0  # Total calls made to the hash function.
+      
+      def next(self):
+          """Finds the next colliding block, doubling our total collisions."""
+          state_to_block = {}
+          while True:
+              block = random_helper.random_bytes(self.hash_cls.BLOCK_SIZE)
+              state = tuple(self.current_state)
+              # Note: we could do a full hash from the total sequence of blocks so far,
+              # but it's equivalent to just focus on the current's block processing.
+              state = self.hash_cls.process_chunk(block, state)
+              self.num_calls += 1
+              if state in state_to_block and block != state_to_block[state]:
+                  # New collision!
+                  self.colliding_blocks.append((block, state_to_block[state]))
+                  break
+              state_to_block[state] = block
+          self.current_state = state
+          self.n += 1
+          
+      def num_collisions(self):
+          return 2**self.n
+      
+      def all_collisions(self):
+          return (b"".join(blocks) for blocks in itertools.product(*self.colliding_blocks))
+  ```
+
+  I chose to implement `f`'s compression function as an AES call using `h` (16-bits) left-padded with zeros as key and 2-byte blocks to be left-padded with zeros, using the first 2 bytes of the output as our output. `g` was implemented similarly, but with `h` twice as big, taking 4 bytes from the output. The collision finding code for `h ` then looks like:
+
+  ```python
+  b2 = 32
+  f_generator = merkle_damgard.CollisionGenerator(CheapHash)
+  for _ in range(b2//2):
+      f_generator.next()
+  done = False
+  while not done:
+      g_hash_to_block = {}
+      for x in f_generator.all_collisions():
+          g_hash = g(x)
+          if g_hash in g_hash_to_block and x != g_hash_to_block[g_hash]:
+              y = g_hash_to_block[g_hash]
+              done = True
+              break
+          g_hash_to_block[g_hash] = x
+      if not done:
+          f_generator.next()
+  assert f(x) == f(y)
+  assert g(x) == g(y)
+  assert h(x) == h(y)
+  ```
+
+- [ ] [53. Kelsey and Schneier's Expandable Messages](src/set_7/53.py)
 
 *TODO: challenge*

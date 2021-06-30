@@ -4,13 +4,15 @@ from . import merkle_damgard
 
 
 class Sha1(merkle_damgard.Hash):
-    OUT_LEN = 20
+    OUT_LEN = 20  # 5 entries of 4 bytes
+    STATE_ENTRIES = 5
 
     def __init__(self, hs=None, msg_len=0):
         hs = hs or (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
-        super(Sha1, self).__init__(hs, msg_len)
+        super().__init__(hs, msg_len)
 
-    def process_chunk(self, chunk, state):
+    @classmethod
+    def process_chunk(cls, chunk, state):
         assert len(chunk) == 64
         w = [0] * 80
         for i in range(16):
@@ -63,4 +65,3 @@ def _test_length_extension():
 
 
 _test_length_extension()
-

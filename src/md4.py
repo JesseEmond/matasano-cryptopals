@@ -3,8 +3,6 @@
 from . import bitops
 from . import merkle_damgard
 
-import struct
-
 
 def f(x, y, z):
     return (x & y) | (bitops.bit_not(x) & z)
@@ -85,14 +83,16 @@ def round_3(x, a, b, c, d):
 class Md4(merkle_damgard.Hash):
 
     ENDIANNESS = "little"
+    STATE_ENTRIES = 4
 
     def __init__(self, state=None, msg_len=0):
         state = state or (0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476)
-        super(Md4, self).__init__(state, msg_len)
+        super().__init__(state, msg_len)
 
-    def process_chunk(self, chunk, state):
+    @classmethod
+    def process_chunk(cls, chunk, state):
         assert len(chunk) == 64
-        x = [int.from_bytes(chunk[i:i + 4], self.ENDIANNESS)
+        x = [int.from_bytes(chunk[i:i + 4], cls.ENDIANNESS)
              for i in range(0, 64, 4)]
         orig_state = tuple(state)
         state = round_1(x, *state)
