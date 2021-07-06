@@ -1,6 +1,6 @@
 # Matasano - [Cryptopals](http://cryptopals.com/)
 
-[![Build Status](https://travis-ci.org/JesseEmond/matasano-cryptopals.svg?branch=master)](https://travis-ci.org/JesseEmond/matasano-cryptopals)
+![Build Status](https://github.com/JesseEmond/matasano-cryptopals/actions/workflows/python-app.yml/badge.svg)
 
 *Note: most links below are just links to files within this repo for your
 convenience.*
