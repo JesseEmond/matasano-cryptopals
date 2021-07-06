@@ -1,6 +1,6 @@
 # Matasano - [Cryptopals](http://cryptopals.com/)
 
-[![Build Status](https://travis-ci.com/JesseEmond/matasano-cryptopals.svg?branch=unittests)](https://travis-ci.org/JesseEmond/matasano-cryptopals)
+[![Build Status](https://travis-ci.org/JesseEmond/matasano-cryptopals.svg?branch=master)](https://travis-ci.org/JesseEmond/matasano-cryptopals)
 
 *Note: most links below are just links to files within this repo for your
 convenience.*
