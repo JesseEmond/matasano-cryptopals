@@ -56,10 +56,13 @@ class BankApi:
             raise ValueError("Invalid CBC-MAC.")
         values = {}
         for key_value in message.split(b"&"):
-            parts = key_value.split(b"=")
-            if len(parts) == 2:
-                key, value = parts
-                values[key] = value
+            parts = key_value.split(b"=", 2)
+            if len(parts) != 2:
+                continue
+            key, value = parts
+            values[key] = value
+        if b"from" not in values or b"tx_list" not in values:
+            return
         from_acc = self.secrets.accounts[int(values[b"from"])]
         txns = values[b"tx_list"].split(b";")
         transfers = []
@@ -198,36 +201,51 @@ try:  # Make sure MAC is checked
 except ValueError:
     pass
 
-# # Let's reset:
-api, bank, alice, me = reset()
-
 # We have the last ciphertext block of Alice's message (the MAC).
 # We have the MAC of one of our messages.
 # By xoring our first plaintext block, we can chain our message to Alice's in a
 # way that will match the IV=0 behavior, allowing us to get our same final MAC.
 
 print("Getting rich with protocol V2.")
-# Intercept a transaction from Alice:
-alice.transfer_v2(txns=[(1, 1)], api=mitm)
-msg = mitm.read()
-alice_msg, alice_mac = msg[:-16], msg[-16:]
-api.transfer_v2(msg)  # Do the real transaction to hide our mitm.
-while api.get_balance(id_=2) < 1000000:  # While we're not rich...
-    amount = api.get_balance(id_=2)
-    # Max we can steal (-1 because Alice is transfering $1 to Bob)
-    amount = min(amount, api.get_balance(id_=0) - 1)
-    # Make a transfer to myself to get an example transaction.
-    # Our first block will get scrambled, so we want to be strategic in what
-    # shows up in the second block:
-    #   from=2&tx_list=2:0;2:XYZ;
-    #   ||||||||||||||||----------------
-    # We want to make sure we include a ';' separator, so send 2 transactions.
-    me.transfer_v2(txns=[(2, 0), (2, amount)], api=mitm)
+for attempt in range(40):
+    # Because we scramble bits with our bitflips, we can insert protocol
+    # characters with our attack (e.g. '&' or ':'), which can mess up parsing.
+    # In practice, we could adjust our payload as needed or retry with new
+    # MACs. Here, we just do multiple attempts to make sure this doesn't fail
+    # due to bad luck and mess up our CI.
+
+    # Let's reset:
+    api, bank, alice, me = reset()
+
+    # Intercept a transaction from Alice:
+    alice.transfer_v2(txns=[(1, 1)], api=mitm)
     msg = mitm.read()
-    me_msg, me_mac = msg[:-16], msg[-16:]
-    first_block, rest = me_msg[:16], me_msg[16:]
-    target_iv = b"\x00" * 16
-    first_block = xor.xor_bytes(first_block,
-                                xor.xor_bytes(target_iv, alice_mac))
-    api.transfer_v2(aes.pad(alice_msg) + first_block + rest + me_mac)
-    print(f"We now have: {api.get_balance(id_=2)}$!")
+    alice_msg, alice_mac = msg[:-16], msg[-16:]
+    api.transfer_v2(msg)  # Do the real transaction to hide our mitm.
+    while api.get_balance(id_=2) < 1000000:  # While we're not rich...
+        amount = api.get_balance(id_=2)
+        # Max we can steal (-1 because Alice is transfering $1 to Bob)
+        amount = min(amount, api.get_balance(id_=0) - 1)
+        # Make a transfer to myself to get an example transaction.
+        # Our first block will get scrambled, so we want to be strategic in what
+        # shows up in the second block:
+        #   from=2&tx_list=2:0;2:XYZ;
+        #   ||||||||||||||||----------------
+        # We want to make sure we include a ';' separator, so send 2 transactions.
+        me.transfer_v2(txns=[(2, 0), (2, amount)], api=mitm)
+        msg = mitm.read()
+        me_msg, me_mac = msg[:-16], msg[-16:]
+        first_block, rest = me_msg[:16], me_msg[16:]
+        target_iv = b"\x00" * 16
+        first_block = xor.xor_bytes(first_block,
+                                    xor.xor_bytes(target_iv, alice_mac))
+        prev_cash = api.get_balance(id_=2)
+        api.transfer_v2(aes.pad(alice_msg) + first_block + rest + me_mac)
+        print(f"We now have: {api.get_balance(id_=2)}$!")
+        if api.get_balance(id_=2) == prev_cash:
+            # Failed for some reason? Retry again with new keys. We were
+            # unlucky with the scrambling.
+            print(f"[!!!] Balance did not change ({attempt}). Retrying.")
+            break
+    if api.get_balance(id_=2) >= 1000000:
+        break  # We're rich! We can leave now.
