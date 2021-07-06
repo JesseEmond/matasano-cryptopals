@@ -56,19 +56,38 @@ class Hash:
         assert len(self._unprocessed) % self.BLOCK_SIZE == 0
         self._process_unprocessed()
         assert len(self._unprocessed) == 0
-        return b"".join(h.to_bytes(self.STATE_ENTRY_SIZE, self.ENDIANNESS)
-                        for h in self._state)
+        return self.state_to_digest(self._state)
+
+    @classmethod
+    def state_to_digest(cls, state):
+        return b"".join(h.to_bytes(cls.STATE_ENTRY_SIZE, cls.ENDIANNESS)
+                        for h in state)
 
     @classmethod
     def process_chunk(cls, chunk, state):
         raise NotImplementedError("process_chunk")
 
+    @classmethod
+    def process_blocks(cls, msg, state):
+        """Returns (msg_unprocessed, state)."""
+        while len(msg) >= cls.BLOCK_SIZE:
+            chunk = msg[:cls.BLOCK_SIZE]
+            state = cls.process_chunk(chunk, state)
+            assert len(state) == cls.STATE_ENTRIES
+            msg = msg[cls.BLOCK_SIZE:]
+        return msg, state
+
     def _process_unprocessed(self):
-        while len(self._unprocessed) >= self.BLOCK_SIZE:
-            chunk = self._unprocessed[:self.BLOCK_SIZE]
-            self._state = self.process_chunk(chunk, self._state)
-            assert len(self._state) == self.STATE_ENTRIES
-            self._unprocessed = self._unprocessed[self.BLOCK_SIZE:]
+        self._unprocessed, self._state = self.process_blocks(
+                self._unprocessed, self._state)
+
+    @classmethod
+    def random_block(cls):
+        return random_helper.random_bytes(cls.BLOCK_SIZE)
+
+    @classmethod
+    def init_state(cls):
+        return cls().state()
 
     @classmethod
     def length_extension_attack(cls, digest, prev_msg_len, extra):
@@ -104,15 +123,14 @@ class Hash:
             print(f"2nd preimage collision, using k={k}")
         expandable = ExpandableMessages(cls, k)
         intermediate = {}
-        state = cls().state()
+        state = cls.init_state()
         for i in range(len(msg) // cls.BLOCK_SIZE):
             block = msg[i * cls.BLOCK_SIZE:(i+1) * cls.BLOCK_SIZE]
-            intermediate[state] = i
+            if i > k:  # Need at least k+1 of prefix+bridge.
+                intermediate[state] = i
             state = cls.process_chunk(block, state)
-        bridge_state = None
-        while bridge_state not in intermediate:
-            bridge = random_helper.random_bytes(cls.BLOCK_SIZE)
-            bridge_state = cls.process_chunk(bridge, expandable.final_state)
+        bridge_state, bridge = _block_collision_into(
+                cls, expandable.final_state, intermediate)
         suffix_idx = intermediate[bridge_state]
         suffix = msg[suffix_idx * cls.BLOCK_SIZE:]
         prefix_len = len(msg) - len(bridge) - len(suffix)
@@ -122,6 +140,20 @@ class Hash:
         assert len(collision) == len(msg)
         return collision
 
+    @classmethod
+    def nostradamus(cls, k, msg_len, verbose=False):
+        """Precompute 2**k glue hashes for given |msg|, creates a hash funnel.
+
+        Later use the given 'generator' to produce glue to get the given hash
+        using our pre-computed funnel. Increase k to move processing to
+        pre-computation.
+
+        Returns:
+            (digest, generator)
+        """
+        generator = NostradamusGenerator(cls, k, msg_len, verbose=verbose)
+        return generator.digest, generator
+
 
 class MulticollisionGenerator:
     """Helper class to iteratively generate more collisions of a MD hash."""
@@ -130,7 +162,7 @@ class MulticollisionGenerator:
         # Sequential pairs of blocks that give a collision under hash_cls.
         # With n pairs of colliding blocks, we can generate 2**n collisions.
         self.colliding_blocks = []
-        self.current_state = self.hash_cls().state()
+        self.current_state = self.hash_cls.init_state()
         self.n = 0  # Number of steps that we ran (2**n collisions).
         self.num_calls = 0  # Total calls made to the hash function.
 
@@ -139,17 +171,12 @@ class MulticollisionGenerator:
 
         This doubles our total collision count.
         """
-        state_to_block = {}
-        while True:
-            block = random_helper.random_bytes(self.hash_cls.BLOCK_SIZE)
-            state = tuple(self.current_state)
-            state = self.hash_cls.process_chunk(block, state)
+        def on_hash():
             self.num_calls += 1
-            if state in state_to_block and block != state_to_block[state]:
-                # New collision!
-                self.colliding_blocks.append((block, state_to_block[state]))
-                break
-            state_to_block[state] = block
+        state = tuple(self.current_state)
+        state, block1, block2 = _block_collision_single(
+                self.hash_cls, state, on_hash_call=on_hash)
+        self.colliding_blocks.append((block1, block2))
         self.current_state = state
         self.n += 1
 
@@ -176,39 +203,20 @@ class ExpandableMessages:
             long = bytearray()
             long_state = state
             for _ in range(2**i):  # Generate 2**i blocks before our 2**i+1th.
-                block = random_helper.random_bytes(self.hash_cls.BLOCK_SIZE)
+                block = self.hash_cls.random_block()
                 long_state = self.hash_cls.process_chunk(block, long_state)
                 long.extend(block)
-            state, short_block, long_block = self._block_collision(state,
-                                                                   long_state)
+            state, short_block, long_block = _block_collision_parallel(
+                    self.hash_cls, state, long_state)
             long.extend(long_block)
             self.short_blocks.append(short_block)
             self.long_blocks.append(bytes(long))
 
         self.final_state = state
 
-    def _block_collision(self, left_state, right_state):
-        """Find collision between two blocks.
-
-        Returns:
-            (colliding_state, left_block, right_block)
-        """
-        left_seen = {}
-        right_seen = {}
-        while True:
-            block = random_helper.random_bytes(self.hash_cls.BLOCK_SIZE)
-            left_hash = self.hash_cls.process_chunk(block, left_state)
-            if left_hash in right_seen:
-                return left_hash, block, right_seen[left_hash]
-            left_seen[left_hash] = block
-            right_hash = self.hash_cls.process_chunk(block, right_state)
-            if right_hash in left_seen:
-                return right_hash, left_seen[right_hash], block
-            right_seen[right_hash] = block
-
     def expand_to(self, n):
         """Generate n blocks (in [k, k+2**k-1]) that produce 'final_state'."""
-        assert self.k <= n <= self.k + 2**self.k - 1
+        assert self.k <= n <= self.k + 2**self.k - 1, n
         message = bytearray()
         binary = bin(n - self.k)[2:].zfill(self.k)
         for i, bit in enumerate(binary):
@@ -217,3 +225,138 @@ class ExpandableMessages:
             else:
                 message.extend(self.long_blocks[i])
         return bytes(message)
+
+
+class NostradamusGenerator:
+    """Helper class to generate a hash that we later find the message for."""
+
+    def __init__(self, hash_cls, k, msg_len, verbose=False):
+        """Precomputes 2**k states to collide into for a msg with |msg|=msg_len.
+
+        Tune as needed; k > state_bits/2 will speed up the collision but take
+        more preprocessing, and vice-versa.
+        """
+        assert msg_len % hash_cls.BLOCK_SIZE == 0, (
+            "|msg_len| must be a multiple of block size.")
+        assert k > 0
+        self.k = k
+        self.msg_len = msg_len
+        self.funnel = []  # k elements, each a map from state to block.
+        self.hash_cls = hash_cls
+        states = set()
+        while len(states) < 2**k:
+            block = hash_cls.random_block()
+            states.add(hash_cls.process_chunk(block, hash_cls.init_state()))
+        states = list(states)
+        for i in reversed(range(k)):
+            if verbose:
+                print(f"  .. creating funnel for 2**{i+1} states..")
+            new_states = []
+            state_to_block = {}
+            for i in range(0, len(states), 2):
+                left, right = states[i:i+2]
+                new_state, left_block, right_block = _block_collision_parallel(
+                        hash_cls, left, right)
+                new_states.append(new_state)
+                state_to_block[left] = left_block
+                state_to_block[right] = right_block
+            self.funnel.append(state_to_block)
+            states = new_states
+        assert len(states) == 1
+        final_state = next(iter(states))
+        if verbose:
+            print("  funnel created")
+        padding = hash_cls.length_padding(msg_len)
+        _, digest_state = hash_cls.process_blocks(padding, final_state)
+        self.digest = hash_cls.state_to_digest(digest_state)
+
+    def get_message(self, prefix, pad_char=None):
+        """Produces message m with the given prefix with H(m) = self.digest.
+
+        If the prefix length is too short for the pre-computed msg_len, pad
+        using pad_char. If none is given or if the prefix is too long, raise
+        ValueError.
+        """
+        glue_len = (self.k + 1) * self.hash_cls.BLOCK_SIZE
+        if len(prefix) + glue_len > self.msg_len:
+            raise ValueError(
+                    f"Prefix len ({len(prefix)}) with glue ({glue_len}) too "
+                    f"long for pre-computed length ({self.msg_len})")
+        elif len(prefix) + glue_len < self.msg_len:
+            if pad_char is None:
+                raise ValueError(
+                        f"Prefix len ({len(prefix)}) with glue ({glue_len}) "
+                        f"too short for pre-computed length ({self.msg_len}), "
+                        f"and no pad_char was given.")
+            pad = pad_char * (self.msg_len - glue_len - len(prefix))
+            prefix += pad.encode("ascii")
+        assert len(prefix) + glue_len == self.msg_len
+        return prefix + self._get_glue(prefix)
+
+    def _get_glue(self, prefix):
+        assert len(prefix) % self.hash_cls.BLOCK_SIZE == 0
+        _, state = self.hash_cls.process_blocks(
+                prefix, self.hash_cls.init_state())
+        leaves = self.funnel[0]
+        state, bridge = _block_collision_into(self.hash_cls, state, leaves)
+        glue = bytearray()
+        glue.extend(bridge)
+        for state_to_block in self.funnel:
+            assert state in state_to_block
+            block = state_to_block[state]
+            glue.extend(block)
+            state = self.hash_cls.process_chunk(block, state)
+        assert len(glue) == (self.k + 1) * self.hash_cls.BLOCK_SIZE
+        return glue
+
+
+def _block_collision_single(hash_cls, state, on_hash_call=None):
+    """Find 2 blocks where H(block1, state) = H(block2, state).
+
+    on_hash_call is called (without args) on every hashing call.
+
+    Returns:
+        (colliding_state, block1, block2)
+    """
+    seen = {}
+    while True:
+        block = hash_cls.random_block()
+        h = hash_cls.process_chunk(block, state)
+        if on_hash_call:
+            on_hash_call()
+        if h in seen and seen[h] != block:
+            return h, block, seen[h]
+        seen[h] = block
+
+
+def _block_collision_parallel(hash_cls, left_state, right_state):
+    """Find 2 blocks that collide starting from distinct states.
+
+    Returns:
+        (colliding_state, left_block, right_block)
+    """
+    left_seen = {}
+    right_seen = {}
+    while True:
+        block = hash_cls.random_block()
+        left_hash = hash_cls.process_chunk(block, left_state)
+        if left_hash in right_seen:
+            return left_hash, block, right_seen[left_hash]
+        left_seen[left_hash] = block
+        right_hash = hash_cls.process_chunk(block, right_state)
+        if right_hash in left_seen:
+            return right_hash, left_seen[right_hash], block
+        right_seen[right_hash] = block
+
+
+def _block_collision_into(hash_cls, state, collision_states):
+    """Find 'block' where H(block, state) is in collision_states.
+
+    Returns:
+        (colliding_state, block)
+    """
+    while True:
+        block = hash_cls.random_block()
+        h = hash_cls.process_chunk(block, state)
+        if h in collision_states:
+            return h, block

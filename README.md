@@ -1513,7 +1513,8 @@ convenience.*
       state = hash_cls().state()  # Initial state.
       for i in range(2**k):
           block = msg[i * hash_cls.BLOCK_SIZE:(i+1) * hash_cls.BLOCK_SIZE]
-          intermediate[state] = i
+          if i > k:  # Need at least k+1 for prefix+bridge.
+          	intermediate[state] = i
           state = hash_cls.process_chunk(block, state)
       bridge_state = None
       while bridge_state not in intermediate:
@@ -1531,6 +1532,92 @@ convenience.*
 
   It is not obvious to me how one would deal with messages that don't have exactly `2**k` blocks, but this is a very neat attack nonetheless.
 
-- [ ] [54. Kelsey and Kohno's Nostradamus Attack](src/set_7/54.py)
+- [x] [54. Kelsey and Kohno's Nostradamus Attack](src/set_7/54.py)
+
+  This one is relatively straightforward -- we create a funnel starting from `2**k` states, colliding pairs at each stage to eventually get a single final state.
+
+  We can create a helper class that handles all of it:
+
+  ```python
+  class NostradamusGenerator:
+      def __init__(self, hash_cls, k, msg_len):
+          """Precompute 2**k states to collide into known final digest, for |msg|."""
+          assert msg_len % hash_cls.BLOCK_SIZE == 0
+          self.k = k
+          self.msg_len = msg_len
+          self.funnel = []  # k elements, each a map from state to block
+          self.hash_cls = hash_cls
+          states = set()
+          while len(states) < 2**k:
+              block = hash_cls.random_block()  # Helper function, like above.
+              states.add(hash_cls.process_chunk(block, hash_cls.init_state()))
+          states = list(states)
+          for _ in range(k):
+              new_states = []
+              state_to_block = {}
+              for i in range(0, len(states), 2):
+                  left, right = states[i:i+2]
+                  new_state, left_block, right_block = _block_collision_parallel(
+                  	hash_cls, left, right)  # Find collision from 2 start states.
+                  new_states.append(new_state)
+                  states_to_block[left] = left_block
+                  states_to_block[right] = right_block
+              self.funnel.append(state_to_block)
+              states = new_states
+          assert len(states) == 1
+          final_state = next(iter(states))
+          padding = hash_cls.length_padding(msg_len)
+          # Helper method to process multiple blocks in a row.
+          _, digest_state = hash_cls.process_blocks(padding, final_state)
+          self.digest = hash_cls.state_to_digest(digest_state)
+      
+      def get_message(self, prefix, pad_char):
+          """Produces msg m with given prefix s.t. H(m) = self.digest."""
+          glue_len = (self.k + 1) * self.hash_cls.BLOCK_SIZE
+          assert len(prefix) + glue_len <= self.msg_len
+          pad = pad_char * (self.msg_len - glue_len - len(prefix))
+          prefix += pad.encode("ascii")
+          assert len(prefix) + glue_len == self.msg_len
+          return prefix + self._get_glue(prefix)
+      
+      def _get_glue(self, prefix):
+          assert len(prefix) % self.hash_cls.BLOCK_SIZE == 0
+          _, state = self.hash_cls.process_blocks(prefix,
+                                                  self.hash_cls.init_state())
+          leaves = self.funnel[0]
+          state, bridge = _block_collision_into(self.hash_cls, state, leaves)
+          glue = bytearray()
+          glue.extend(bridge)
+          for state_to_block in self.funnel:
+              assert state in state_to_block
+              block = state_to_block[state]
+              glue.extend(block)
+              state = self.hash_cls.process_chunk(block, state)
+          assert len(glue) == (self.k + 1) * self.hash_cls.BLOCK_SIZE
+          return glue
+  ```
+
+  With that, we can now show off!
+
+  ```python
+  msg_len = 5000  # Roughly. We'll pad to it.
+  b = MyHash.state_size() * 8
+  generator = NostradamusGenerator(MyHash, k=b//2, msg_len=msg_len)
+  print("I am Nostradamus. I know the baseball future. Here is my proof:")
+  print(generator.digest.hex())
+  
+  scores = baseball_season()  # Wait...
+  
+  print("Ah. Just like I predicted! My prediction was...")
+  prediction_prefix = scores.encode("ascii") + b"\n\nMy secret notes (ignore):\n"
+  prediction = generator.get_message(prediction_prefix, pad_char=" ")
+  print(prediction)
+  print(f"Hash: {MyHash().update(prediction).digest().hex()}")
+  assert generator.digest == MyHash().update(prediction).digest()
+  ```
+
+  Here again I'm not sure how one would go around removing the restriction on `msg_len` (to be a block size multiple in this case), since all our precomputations assume that we are at a block boundary, but presumably this wouldn't often be an issue in practice since we are already adding some padding, let's assume we can add a bit more to reach a block size multiple.
+
+- [ ] [55. MD4 Collisions](src/set_7/55.py)
 
 *TODO: challenge*
