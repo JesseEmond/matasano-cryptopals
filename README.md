@@ -1444,6 +1444,93 @@ convenience.*
   assert h(x) == h(y)
   ```
 
-- [ ] [53. Kelsey and Schneier's Expandable Messages](src/set_7/53.py)
+- [x] [53. Kelsey and Schneier's Expandable Messages](src/set_7/53.py)
+
+  Building expandable messages gives us `k` choices, each path leading to the same final state -- either we use a single block, or `2**i+1` blocks (`i` goes over `[0, k]`). What this allows us to do is to generate any message with length `n` blocks, as long as `k <= n <= k + 2**k - 1`. The way we do this is first by noticing that each step we either add `1`, or `1` plus a power of `2`. That means that if we look at the binary representation of `n - k`, it tells us whether we should take the longer block (to get `+2**i`) or a shorter one (to leave that bit as 0).
+
+  We can build a helper class to create expandable messages:
+
+  ```python
+  class ExpandableMessages:
+  def __init__(self, hash_cls: merkle_damgard.Hash, k: int):
+      self.k = k
+      self.hash_cls = hash_cls
+      self.short_blocks = []  # When we want +1
+      self.long_blocks = []  # When we want +2**i+1
+      
+      state = hash_cls().state()  # Initial state
+      for i in reversed(range(k)):
+          long = bytearray()
+          long_state = state
+          for _ in range(2**i):  # The 2**i blocks before our 2**i+1th
+              block = random_helper.random_bytes(self.hash_cls.BLOCK_SIZE)
+              long_state = hash_cls.process_chunk(block, long_state)
+              long.extend(block)
+          state, short_block, long_block = self._block_collision(state, long_state)
+          
+          long.extend(long_block)
+          self.short_blocks.append(short_block)
+          self.long_blocks.append(bytes(long))
+      self.final_state = state
+  
+  def _block_collision(self, left_state, right_state):
+      """Returns (colliding_state, left_block, right_block)."""
+      left_seen = {}
+      right_seen = {}
+      while True:
+          block = random_helper.random_bytes(self.hash_cls.BLOCK_SIZE)
+          left_hash = self.hash_cls.process_chunk(block, left_state)
+          if left_hash in right_seen:
+              return left_hash, block, right_seen[left_hash]
+          left_seen[left_hash] = block
+          right_hash = self.hash_cls.process_chunk(block, right_state)
+          if right_hash in left_seen:
+              return right_hash, left_seen[right_hash], block
+          right_seen[right_hash] = block
+  
+  def expand_to(self, n):
+      """Generate n blocks (in [k, k+2**k-1]) that produce 'final_state'."""
+      assert self.k <= n <= self.k + 2**self.k - 1
+      message = bytearray()
+      binary = bin(n - self.k)[2:].zfill(self.k)
+      for i, bit in enumerate(binary):
+          if bit == "0":
+              message.extend(self.short_blocks[i])
+          else:
+              message.extend(self.long_blocks[i])
+      return bytes(message)
+  ```
+
+  With this, we can create a 2nd preimage collision for a message that has `2**k` blocks:
+
+  ```python
+  def second_preimage_collision(hash_cls, msg):
+      """Find m s.t. H(m) = H(msg), |msg| must have 2**k blocks, int k."""
+      k = round(math.log2(len(msg) / hash_cls.BLOCK_SIZE))
+      assert 2**k * hash_cls.BLOCK_SIZE == len(msg)
+      expandable = ExpandableMessages(hash_cls, k)
+      intermediate = {}
+      state = hash_cls().state()  # Initial state.
+      for i in range(2**k):
+          block = msg[i * hash_cls.BLOCK_SIZE:(i+1) * hash_cls.BLOCK_SIZE]
+          intermediate[state] = i
+          state = hash_cls.process_chunk(block, state)
+      bridge_state = None
+      while bridge_state not in intermediate:
+          bridge = random_helper.random_bytes(hash_cls.BLOCK_SIZE)
+          bridge_state = hash_cls.process_chunk(bridge, expandable.final_state)
+      suffix_idx = intermediate[bridge_state]
+      suffix = msg[suffix_idx * hash_cls.BLOCK_SIZE:]
+      prefix_len = len(msg) - len(bridge) - len(suffix)
+      assert prefix_len % hash_cls.BLOCK_SIZE == 0
+      prefix = expandable.expand_to(prefix_len // hash_cls.BLOCK_SIZE)
+      collision = prefix + bridge + suffix
+      assert len(collision) == len(msg)
+      return collision
+  ```
+
+  It is not obvious to me how one would deal with messages that don't have exactly `2**k` blocks, but this is a very neat attack nonetheless.
+
+- [ ] [54. Kelsey and Kohno's Nostradamus Attack](src/set_7/54.py)
 
 *TODO: challenge*

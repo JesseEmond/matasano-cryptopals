@@ -68,19 +68,19 @@ if __name__ == "__main__":
     print(f"f(hello) = {f(b'hello').hex()}")
 
     print("Generating 2 collisions...")
-    collisions = list(CheapHash.generate_collisions(n=1, verbose=True))
+    collisions = list(CheapHash.generate_multicollisions(n=1, verbose=True))
     assert len(collisions) == 2
     verify_collisions(collisions, CheapHash)
 
     print("Generating 8 collisions...")
-    collisions = list(CheapHash.generate_collisions(n=3, verbose=True))
+    collisions = list(CheapHash.generate_multicollisions(n=3, verbose=True))
     assert len(collisions) == 8
     verify_collisions(collisions, CheapHash)
 
     b1, b2 = CheapHash.state_size() * 8, LessCheapHash.state_size() * 8
     print(f"b1={b1}  b2={b2}")
     print(f"Generating 2**{b2//2} f collisions...")
-    f_generator = merkle_damgard.CollisionGenerator(CheapHash)
+    f_generator = merkle_damgard.MulticollisionGenerator(CheapHash)
     for i in range(b2//2):
         f_generator.next()
         print(f"  .. {i+1}/{b2//2}")
